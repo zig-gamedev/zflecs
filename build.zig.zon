@@ -1,0 +1,12 @@
+.{
+    .name = "zflecs",
+    .version = "0.2.0-dev",
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "libs",
+        "src",
+        "README.md",
+        "LICENSE",
+    },
+}
