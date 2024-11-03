@@ -1,4 +1,4 @@
-# zflecs v0.1.0
+# [zflecs](https://github.com/zig-gamedev/zflecs)
 
 Zig build package and bindings for [flecs](https://github.com/SanderMertens/flecs) ECS v3.2.11
 
