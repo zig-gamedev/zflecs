@@ -2580,9 +2580,9 @@ pub fn ADD_SYSTEM(
     name: [*:0]const u8,
     phase: entity_t,
     comptime fn_system: anytype,
-) void {
+) entity_t {
     var desc = SYSTEM_DESC(fn_system);
-    SYSTEM(world, name, phase, &desc);
+    return SYSTEM(world, name, phase, &desc);
 }
 
 /// Creates a system description and adds it to the world, from function parameters
@@ -2593,9 +2593,9 @@ pub fn ADD_SYSTEM_WITH_FILTERS(
     phase: entity_t,
     comptime fn_system: anytype,
     filters: []const term_t,
-) void {
+) entity_t {
     var desc = SYSTEM_DESC_WITH_FILTERS(fn_system, filters);
-    SYSTEM(world, name, phase, &desc);
+    return SYSTEM(world, name, phase, &desc);
 }
 
 pub fn new_entity(world: *world_t, name: [*:0]const u8) entity_t {

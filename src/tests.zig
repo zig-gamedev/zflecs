@@ -312,7 +312,7 @@ test "zflecs.helloworld" {
     ecs.TAG(world, Apples);
 
     {
-        ecs.ADD_SYSTEM_WITH_FILTERS(world, "move system", ecs.OnUpdate, move, &.{
+        _ = ecs.ADD_SYSTEM_WITH_FILTERS(world, "move system", ecs.OnUpdate, move, &.{
             .{ .id = ecs.id(Position) },
             .{ .id = ecs.id(Velocity) },
         });
@@ -361,8 +361,8 @@ test "zflecs.helloworld_systemcomptime" {
     ecs.TAG(world, Eats);
     ecs.TAG(world, Apples);
 
-    ecs.ADD_SYSTEM(world, "move system", ecs.OnUpdate, move_system);
-    ecs.ADD_SYSTEM(world, "move system with iterator", ecs.OnUpdate, move_system_with_it);
+    _ = ecs.ADD_SYSTEM(world, "move system", ecs.OnUpdate, move_system);
+    _ = ecs.ADD_SYSTEM(world, "move system with iterator", ecs.OnUpdate, move_system_with_it);
 
     const bob = ecs.new_entity(world, "Bob");
     _ = ecs.set(world, bob, Position, .{ .x = 0, .y = 0 });
@@ -502,7 +502,7 @@ test "zflecs.struct-dtor-hook" {
             }
         }.chatSystem;
         system_desc.query.terms[0] = .{ .id = ecs.id(Chat) };
-        ecs.SYSTEM(world, "Chat system", ecs.OnUpdate, &system_desc);
+        _ = ecs.SYSTEM(world, "Chat system", ecs.OnUpdate, &system_desc);
     }
 
     const chat_entity = ecs.new_entity(world, "Chat entity");
