@@ -161,6 +161,9 @@ pub const EcsAperiodicComponentMonitors = 1 << 2;
 pub const EcsAperiodicEmptyQueries = 1 << 4;
 
 // Extern declarations
+extern const EcsQuery: entity_t;
+extern const EcsObserver: entity_t;
+extern const EcsSystem: entity_t;
 extern const EcsWildcard: entity_t;
 extern const EcsAny: entity_t;
 extern const EcsTransitive: entity_t;
@@ -223,6 +226,9 @@ extern const EcsPredLookup: entity_t;
 extern const EcsIsA: entity_t;
 extern const EcsDependsOn: entity_t;
 
+pub var Query: entity_t = undefined;
+pub var Observer: entity_t = undefined;
+pub var System: entity_t = undefined;
 pub var Wildcard: entity_t = undefined;
 pub var Any: entity_t = undefined;
 pub var Transitive: entity_t = undefined;
@@ -1175,6 +1181,9 @@ pub fn init() *world_t {
     component_ids_hm.ensureTotalCapacity(32) catch @panic("OOM");
     const world = ecs_init();
 
+    Query = EcsQuery;
+    Observer = EcsObserver;
+    System = EcsSystem;
     Wildcard = EcsWildcard;
     Any = EcsAny;
     Transitive = EcsTransitive;
@@ -1498,9 +1507,9 @@ extern fn ecs_add_id(world: *world_t, entity: entity_t, id: id_t) void;
 pub const remove_id = ecs_remove_id;
 extern fn ecs_remove_id(world: *world_t, entity: entity_t, id: id_t) void;
 
-/// `pub fn override_id(world: *world_t, entity: entity_t, id: id_t) void`
-pub const override_id = ecs_override_id;
-extern fn ecs_override_id(world: *world_t, entity: entity_t, id: id_t) void;
+/// `pub fn auto_override_id(world: *world_t, entity: entity_t, id: id_t) void`
+pub const auto_override_id = ecs_auto_override_id;
+extern fn ecs_auto_override_id(world: *world_t, entity: entity_t, id: id_t) void;
 
 /// `pub fn clear(world: *world_t, entity: entity_t) void`
 pub const clear = ecs_clear;
@@ -2039,10 +2048,6 @@ extern fn ecs_enqueue(world: *world_t, desc: *event_desc_t) void;
 pub const observer_init = ecs_observer_init;
 extern fn ecs_observer_init(world: *world_t, desc: *const observer_desc_t) entity_t;
 
-/// `pub fn observer_default_run_action(it: *iter_t) bool`
-pub const observer_default_run_action = ecs_observer_default_run_action;
-extern fn ecs_observer_default_run_action(it: *iter_t) bool;
-
 /// `pub fn observer_get_ctx(world: *const world_t, observer: entity_t) ?*anyopaque`
 pub const observer_get_ctx = ecs_observer_get_ctx;
 extern fn ecs_observer_get_ctx(world: *const world_t, observer: entity_t) ?*anyopaque;
@@ -2466,7 +2471,7 @@ pub fn SYSTEM(
     name: [*:0]const u8,
     phase: entity_t,
     system_desc: *system_desc_t,
-) void {
+) entity_t {
     var entity_desc = entity_desc_t{};
     entity_desc.id = new_id(world);
     entity_desc.name = name;
@@ -2475,20 +2480,20 @@ pub fn SYSTEM(
     entity_desc.add = &.{ first, second, 0 };
 
     system_desc.entity = entity_init(world, &entity_desc);
-    _ = system_init(world, system_desc);
+    return system_init(world, system_desc);
 }
 
 pub fn OBSERVER(
     world: *world_t,
     name: [*:0]const u8,
     observer_desc: *observer_desc_t,
-) void {
+) entity_t {
     var entity_desc = entity_desc_t{};
     entity_desc.id = new_id(world);
     entity_desc.name = name;
 
     observer_desc.entity = entity_init(world, &entity_desc);
-    _ = observer_init(world, observer_desc);
+    return observer_init(world, observer_desc);
 }
 
 /// Implements a flecs system from function parameters.
@@ -2575,9 +2580,9 @@ pub fn ADD_SYSTEM(
     name: [*:0]const u8,
     phase: entity_t,
     comptime fn_system: anytype,
-) void {
+) entity_t {
     var desc = SYSTEM_DESC(fn_system);
-    SYSTEM(world, name, phase, &desc);
+    return SYSTEM(world, name, phase, &desc);
 }
 
 /// Creates a system description and adds it to the world, from function parameters
@@ -2588,9 +2593,9 @@ pub fn ADD_SYSTEM_WITH_FILTERS(
     phase: entity_t,
     comptime fn_system: anytype,
     filters: []const term_t,
-) void {
+) entity_t {
     var desc = SYSTEM_DESC_WITH_FILTERS(fn_system, filters);
-    SYSTEM(world, name, phase, &desc);
+    return SYSTEM(world, name, phase, &desc);
 }
 
 pub fn new_entity(world: *world_t, name: [*:0]const u8) entity_t {
@@ -2600,7 +2605,7 @@ pub fn new_entity(world: *world_t, name: [*:0]const u8) entity_t {
 pub fn new_prefab(world: *world_t, name: [*:0]const u8) entity_t {
     return entity_init(world, &.{
         .name = name,
-        .add = [_]id_t{EcsPrefab} ++ [_]id_t{0} ** (FLECS_ID_DESC_MAX - 1),
+        .add = @ptrCast(&[_]id_t{EcsPrefab} ++ [_]id_t{0} ** (FLECS_ID_DESC_MAX - 1)),
     });
 }
 
@@ -2693,7 +2698,7 @@ pub fn remove(world: *world_t, entity: entity_t, comptime T: type) void {
 }
 
 pub fn override(world: *world_t, entity: entity_t, comptime T: type) void {
-    ecs_override_id(world, entity, id(T));
+    ecs_auto_override_id(world, entity, id(T));
 }
 
 pub fn modified(world: *world_t, entity: entity_t, comptime T: type) void {
@@ -2939,11 +2944,11 @@ extern fn ecs_import_c(world: *world_t, module: module_action_t, module_name_c: 
 
 //--------------------------------------------------------------------------------------------------
 //
-// FLECS_MONITOR
+// FLECS_STATS
 //
 //--------------------------------------------------------------------------------------------------
 
-pub extern fn FlecsMonitorImport(world: *world_t) void;
+pub extern fn FlecsStatsImport(world: *world_t) void;
 //--------------------------------------------------------------------------------------------------
 //
 // FLECS_REST
