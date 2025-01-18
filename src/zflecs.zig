@@ -1498,9 +1498,9 @@ extern fn ecs_add_id(world: *world_t, entity: entity_t, id: id_t) void;
 pub const remove_id = ecs_remove_id;
 extern fn ecs_remove_id(world: *world_t, entity: entity_t, id: id_t) void;
 
-/// `pub fn override_id(world: *world_t, entity: entity_t, id: id_t) void`
-pub const override_id = ecs_override_id;
-extern fn ecs_override_id(world: *world_t, entity: entity_t, id: id_t) void;
+/// `pub fn auto_override_id(world: *world_t, entity: entity_t, id: id_t) void`
+pub const auto_override_id = ecs_auto_override_id;
+extern fn ecs_auto_override_id(world: *world_t, entity: entity_t, id: id_t) void;
 
 /// `pub fn clear(world: *world_t, entity: entity_t) void`
 pub const clear = ecs_clear;
@@ -2038,10 +2038,6 @@ extern fn ecs_enqueue(world: *world_t, desc: *event_desc_t) void;
 /// `pub fn observer_init(world: *world_t, desc: *const observer_desc_t) entity_t`
 pub const observer_init = ecs_observer_init;
 extern fn ecs_observer_init(world: *world_t, desc: *const observer_desc_t) entity_t;
-
-/// `pub fn observer_default_run_action(it: *iter_t) bool`
-pub const observer_default_run_action = ecs_observer_default_run_action;
-extern fn ecs_observer_default_run_action(it: *iter_t) bool;
 
 /// `pub fn observer_get_ctx(world: *const world_t, observer: entity_t) ?*anyopaque`
 pub const observer_get_ctx = ecs_observer_get_ctx;
@@ -2693,7 +2689,7 @@ pub fn remove(world: *world_t, entity: entity_t, comptime T: type) void {
 }
 
 pub fn override(world: *world_t, entity: entity_t, comptime T: type) void {
-    ecs_override_id(world, entity, id(T));
+    ecs_auto_override_id(world, entity, id(T));
 }
 
 pub fn modified(world: *world_t, entity: entity_t, comptime T: type) void {
@@ -2939,11 +2935,11 @@ extern fn ecs_import_c(world: *world_t, module: module_action_t, module_name_c: 
 
 //--------------------------------------------------------------------------------------------------
 //
-// FLECS_MONITOR
+// FLECS_STATS
 //
 //--------------------------------------------------------------------------------------------------
 
-pub extern fn FlecsMonitorImport(world: *world_t) void;
+pub extern fn FlecsStatsImport(world: *world_t) void;
 //--------------------------------------------------------------------------------------------------
 //
 // FLECS_REST
