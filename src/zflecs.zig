@@ -161,6 +161,9 @@ pub const EcsAperiodicComponentMonitors = 1 << 2;
 pub const EcsAperiodicEmptyQueries = 1 << 4;
 
 // Extern declarations
+extern const EcsQuery: entity_t;
+extern const EcsObserver: entity_t;
+extern const EcsSystem: entity_t;
 extern const EcsWildcard: entity_t;
 extern const EcsAny: entity_t;
 extern const EcsTransitive: entity_t;
@@ -223,6 +226,9 @@ extern const EcsPredLookup: entity_t;
 extern const EcsIsA: entity_t;
 extern const EcsDependsOn: entity_t;
 
+pub var Query: entity_t = undefined;
+pub var Observer: entity_t = undefined;
+pub var System: entity_t = undefined;
 pub var Wildcard: entity_t = undefined;
 pub var Any: entity_t = undefined;
 pub var Transitive: entity_t = undefined;
@@ -1175,6 +1181,9 @@ pub fn init() *world_t {
     component_ids_hm.ensureTotalCapacity(32) catch @panic("OOM");
     const world = ecs_init();
 
+    Query = EcsQuery;
+    Observer = EcsObserver;
+    System = EcsSystem;
     Wildcard = EcsWildcard;
     Any = EcsAny;
     Transitive = EcsTransitive;
