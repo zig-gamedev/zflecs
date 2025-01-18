@@ -2605,7 +2605,7 @@ pub fn new_entity(world: *world_t, name: [*:0]const u8) entity_t {
 pub fn new_prefab(world: *world_t, name: [*:0]const u8) entity_t {
     return entity_init(world, &.{
         .name = name,
-        .add = [_]id_t{EcsPrefab} ++ [_]id_t{0} ** (FLECS_ID_DESC_MAX - 1),
+        .add = @ptrCast(&[_]id_t{EcsPrefab} ++ [_]id_t{0} ** (FLECS_ID_DESC_MAX - 1)),
     });
 }
 
