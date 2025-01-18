@@ -2471,7 +2471,7 @@ pub fn SYSTEM(
     name: [*:0]const u8,
     phase: entity_t,
     system_desc: *system_desc_t,
-) void {
+) entity_t {
     var entity_desc = entity_desc_t{};
     entity_desc.id = new_id(world);
     entity_desc.name = name;
@@ -2480,20 +2480,20 @@ pub fn SYSTEM(
     entity_desc.add = &.{ first, second, 0 };
 
     system_desc.entity = entity_init(world, &entity_desc);
-    _ = system_init(world, system_desc);
+    return system_init(world, system_desc);
 }
 
 pub fn OBSERVER(
     world: *world_t,
     name: [*:0]const u8,
     observer_desc: *observer_desc_t,
-) void {
+) entity_t {
     var entity_desc = entity_desc_t{};
     entity_desc.id = new_id(world);
     entity_desc.name = name;
 
     observer_desc.entity = entity_init(world, &entity_desc);
-    _ = observer_init(world, observer_desc);
+    return observer_init(world, observer_desc);
 }
 
 /// Implements a flecs system from function parameters.
