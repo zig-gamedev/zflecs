@@ -37,7 +37,7 @@ fn move_system(positions: []Position, velocities: []const Velocity) void {
 //Optionally, systems can receive the components iterator (usually not necessary)
 fn move_system_with_it(it: *ecs.iter_t, positions: []Position, velocities: []const Velocity) void {
     const type_str = ecs.table_str(it.world, it.table).?;
-    print("Move entities with [{s}]\n", .{type_str});
+    std.debug.print("Move entities with [{s}]\n", .{type_str});
     defer ecs.os.free(type_str);
 
     for (positions, velocities) |*p, v| {
