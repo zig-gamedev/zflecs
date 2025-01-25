@@ -5,7 +5,7 @@ const builtin = @import("builtin");
 pub const flecs_version = std.SemanticVersion{
     .major = 4,
     .minor = 0,
-    .patch = 2,
+    .patch = 3,
 };
 
 // TODO: flecs_is_sanitize should come from flecs build flags.
@@ -91,6 +91,7 @@ pub const EcsQueryHasCacheable = 1 << 24;
 pub const EcsQueryIsCacheable = 1 << 25;
 pub const EcsQueryHasTableThisVar = 1 << 26;
 pub const EcsQueryCacheYieldEmptyTables = 1 << 27;
+pub const EcsQueryNested = 1 << 28;
 
 // Term flags
 pub const EcsTermMatchAny = 1 << 0;
@@ -116,7 +117,8 @@ pub const EcsObserverIsMonitor = 1 << 2;
 pub const EcsObserverIsDisabled = 1 << 3;
 pub const EcsObserverIsParentDisabled = 1 << 4;
 pub const EcsObserverBypassQuery = 1 << 5;
-pub const EcsObserverYieldOnDelete = 1 << 6;
+pub const EcsObserverYieldOnCreate = 1 << 6;
+pub const EcsObserverYieldOnDelete = 1 << 7;
 
 // Table flags (used by ecs_table_t::flags)
 
@@ -1816,6 +1818,28 @@ extern fn ecs_get_path_w_sep(
 ) ?[*]u8;
 
 /// ```
+/// pub fn ecs_get_path_w_sep_buf(
+///     world: *const world_t,
+///     parent: entity_t,
+///     child: entity_t,
+///     sep: ?[*:0]const u8,
+///     prefix: ?[*:0]const u8,
+///     buf: *strbuf_t,
+///     escape: bool,
+/// ) ?[*]u8;
+/// ```
+pub const get_path_w_sep_buf = ecs_get_path_w_sep_buf;
+extern fn ecs_get_path_w_sep_buf(
+    world: *const world_t,
+    parent: entity_t,
+    child: entity_t,
+    sep: ?[*:0]const u8,
+    prefix: ?[*:0]const u8,
+    buf: *strbuf_t,
+    escape: bool,
+) void;
+
+/// ```
 /// pub fn ecs_new_from_path_w_sep(
 ///     world: *world_t,
 ///     parent: entity_t,
@@ -2045,14 +2069,27 @@ pub const query_group_info_t = extern struct {
     table_count: i32,
     ctx: ?*anyopaque,
 };
-
 /// `pub fn query_get_group_info(query: *const query_t, group_id: u64) ?*const query_group_info_t`
 pub const query_get_group_info = ecs_query_get_group_info;
 extern fn ecs_query_get_group_info(query: *const query_t, group_id: u64) ?*const query_group_info_t;
 
-/// `pub fn query_orphaned(query: *const query_t) bool`
-pub const query_orphaned = ecs_query_orphaned;
-extern fn ecs_query_orphaned(query: *const query_t) bool;
+pub const query_count_t = struct {
+    results: i32,
+    entities: i32,
+    tables: i32,
+    empty_tables: i32,
+};
+/// `pub fn query_query_count(query: *const query_t) query_count_t`
+pub const query_count = ecs_query_count;
+extern fn ecs_query_count(query: *const query_t) query_count_t;
+
+/// `pub fn query_is_true(query: *const query_t) bool`
+pub const query_is_true = ecs_query_is_true;
+extern fn ecs_query_is_true(query: *const query_t) bool;
+
+/// `pub fn query_get_cache_query(query: *const query_t) *const query_t`
+pub const query_get_cache_query = ecs_query_get_cache_query;
+extern fn ecs_query_get_cache_query(query: *const query_t) *const query_t;
 
 /// `pub fn query_str(query: *const query_t) [*:0]u8`
 pub const query_str = ecs_query_str;
@@ -2112,9 +2149,13 @@ pub const entities_t = extern struct {
     count: i32,
     alive_count: i32,
 };
-/// `pub fn iter_poly(world: *const world_t, poly: *const poly_t, iter: [*]iter_t, filter: ?*term_t) void`
+/// `pub fn get_entities(world: *const world_t) entities_t;
 pub const get_entities = ecs_get_entities;
 extern fn ecs_get_entities(world: *const world_t) entities_t;
+
+/// `pub fn get_flags(world: *const world_t) flags32_t`
+pub const get_flags = ecs_get_flags;
+extern fn ecs_get_flags(world: *const world_t) flags32_t;
 
 /// `pub fn iter_next(it: *iter_t) bool`
 pub const iter_next = ecs_iter_next;
@@ -2387,6 +2428,10 @@ extern fn ecs_search_relation(
     id_out: ?*id_t,
     tr_out: ?**table_record_t,
 ) i32;
+
+/// `pub fn table_clear_entities(world: *const world_t, table: *const table_t) void`
+pub const table_clear_entities = ecs_table_clear_entities;
+extern fn ecs_table_clear_entities(world: *const world_t, table: *const table_t) void;
 //--------------------------------------------------------------------------------------------------
 //
 // Log api
