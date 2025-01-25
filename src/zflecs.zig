@@ -972,7 +972,7 @@ pub const query_desc_t = extern struct {
     terms: [FLECS_TERM_COUNT_MAX]term_t = [_]term_t{.{}} ** FLECS_TERM_COUNT_MAX,
     expr: ?[*:0]const u8 = null,
 
-    cache_kind: query_cache_kind_t = .QueryCacheNone,
+    cache_kind: query_cache_kind_t = .QueryCacheDefault,
 
     flags: flags32_t = 0,
 
