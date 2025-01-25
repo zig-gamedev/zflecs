@@ -316,68 +316,7 @@ pub var OnStore: entity_t = undefined;
 pub var PostFrame: entity_t = undefined;
 pub var Phase: entity_t = undefined;
 
-// pub var Query: entity_t = undefined;
-// pub var Observer: entity_t = undefined;
-// pub var System: entity_t = undefined;
-// pub var Wildcard: entity_t = undefined;
-// pub var Any: entity_t = undefined;
-// pub var Transitive: entity_t = undefined;
-// pub var Reflexive: entity_t = undefined;
-// pub var Final: entity_t = undefined;
-// pub var DontInherit: entity_t = undefined;
-// pub var PairIsTag: entity_t = undefined;
-// pub var Union: entity_t = undefined;
-// pub var Exclusive: entity_t = undefined;
-// pub var Acyclic: entity_t = undefined;
-// pub var Traversable: entity_t = undefined;
-// pub var Symmetric: entity_t = undefined;
-// pub var With: entity_t = undefined;
-// pub var OneOf: entity_t = undefined;
-
-// pub var IsA: entity_t = undefined;
-// pub var ChildOf: entity_t = undefined;
-// pub var DependsOn: entity_t = undefined;
-// pub var SlotOf: entity_t = undefined;
-
-// pub var AlwaysOverride: entity_t = undefined;
-// pub var Alias: entity_t = undefined;
-// pub var Prefab: entity_t = undefined;
-// pub var Disabled: entity_t = undefined;
-
-// pub var OnStart: entity_t = undefined;
-// pub var PreFrame: entity_t = undefined;
-// pub var OnLoad: entity_t = undefined;
-// pub var PostLoad: entity_t = undefined;
-// pub var PreUpdate: entity_t = undefined;
-// pub var OnUpdate: entity_t = undefined;
-// pub var OnValidate: entity_t = undefined;
-// pub var PostUpdate: entity_t = undefined;
-// pub var PreStore: entity_t = undefined;
-// pub var OnStore: entity_t = undefined;
-// pub var PostFrame: entity_t = undefined;
-// pub var Phase: entity_t = undefined;
-
-// pub var OnAdd: entity_t = undefined;
-// pub var OnRemove: entity_t = undefined;
-// pub var OnSet: entity_t = undefined;
-// pub var UnSet: entity_t = undefined;
-// pub var Monitor: entity_t = undefined;
-// pub var OnTableCreate: entity_t = undefined;
-// pub var OnTableDelete: entity_t = undefined;
-// pub var OnTableEmpty: entity_t = undefined;
-// pub var OnTableFill: entity_t = undefined;
-
-// pub var OnDelete: entity_t = undefined;
-// pub var OnDeleteTarget: entity_t = undefined;
-// pub var Remove: entity_t = undefined;
-// pub var Delete: entity_t = undefined;
-// pub var Panic: entity_t = undefined;
-
 // pub var DefaultChildComponent: EcsDefaultChildComponent = undefined;
-
-// pub var PredEq: entity_t = undefined;
-// pub var PredMatch: entity_t = undefined;
-// pub var PredLookup: entity_t = undefined;
 
 //--------------------------------------------------------------------------------------------------
 //
