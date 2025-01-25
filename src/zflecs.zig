@@ -5,7 +5,7 @@ const builtin = @import("builtin");
 pub const flecs_version = std.SemanticVersion{
     .major = 4,
     .minor = 0,
-    .patch = 1,
+    .patch = 2,
 };
 
 // TODO: flecs_is_sanitize should come from flecs build flags.
@@ -46,6 +46,7 @@ pub const WorldFini = 1 << 4;
 pub const WorldMeasureFrameTime = 1 << 5;
 pub const WorldMeasureSystemTime = 1 << 6;
 pub const WorldMultiThreaded = 1 << 7;
+pub const WorldFrameInProgress = 1 << 8;
 
 // Iterator flags
 pub const EcsIterIsValid = 1 << 0;
@@ -77,18 +78,18 @@ pub const EcsQueryMatchThis = 1 << 11;
 pub const EcsQueryMatchOnlyThis = 1 << 12;
 pub const EcsQueryMatchOnlySelf = 1 << 13;
 pub const EcsQueryMatchWildcards = 1 << 14;
-pub const EcsQueryHasCondSet = 1 << 15;
-pub const EcsQueryHasPred = 1 << 16;
-pub const EcsQueryHasScopes = 1 << 17;
-pub const EcsQueryHasRefs = 1 << 18;
-pub const EcsQueryHasOutTerms = 1 << 19;
-pub const EcsQueryHasNonThisOutTerms = 1 << 20;
-pub const EcsQueryHasMonitor = 1 << 21;
-pub const EcsQueryIsTrivial = 1 << 22;
-pub const EcsQueryHasCacheable = 1 << 23;
-pub const EcsQueryIsCacheable = 1 << 24;
-pub const EcsQueryHasTableThisVar = 1 << 25;
-// 26 missing in flecs
+pub const EcsQueryMatchNothing = 1 << 15;
+pub const EcsQueryHasCondSet = 1 << 16;
+pub const EcsQueryHasPred = 1 << 17;
+pub const EcsQueryHasScopes = 1 << 18;
+pub const EcsQueryHasRefs = 1 << 19;
+pub const EcsQueryHasOutTerms = 1 << 20;
+pub const EcsQueryHasNonThisOutTerms = 1 << 21;
+pub const EcsQueryHasMonitor = 1 << 22;
+pub const EcsQueryIsTrivial = 1 << 23;
+pub const EcsQueryHasCacheable = 1 << 24;
+pub const EcsQueryIsCacheable = 1 << 25;
+pub const EcsQueryHasTableThisVar = 1 << 26;
 pub const EcsQueryCacheYieldEmptyTables = 1 << 27;
 
 // Term flags
@@ -115,6 +116,7 @@ pub const EcsObserverIsMonitor = 1 << 2;
 pub const EcsObserverIsDisabled = 1 << 3;
 pub const EcsObserverIsParentDisabled = 1 << 4;
 pub const EcsObserverBypassQuery = 1 << 5;
+pub const EcsObserverYieldOnDelete = 1 << 6;
 
 // Table flags (used by ecs_table_t::flags)
 
@@ -137,13 +139,12 @@ pub const EcsTableHasOverrides = 1 << 15;
 pub const EcsTableHasOnAdd = 1 << 16;
 pub const EcsTableHasOnRemove = 1 << 17;
 pub const EcsTableHasOnSet = 1 << 18;
-// 19 missing in flecs
-pub const EcsTableHasOnTableFill = 1 << 20;
-pub const EcsTableHasOnTableEmpty = 1 << 21;
-pub const EcsTableHasOnTableCreate = 1 << 22;
-pub const EcsTableHasOnTableDelete = 1 << 23;
-pub const EcsTableHasSparse = 1 << 24;
-pub const EcsTableHasUnion = 1 << 25;
+pub const EcsTableHasOnTableFill = 1 << 19;
+pub const EcsTableHasOnTableEmpty = 1 << 20;
+pub const EcsTableHasOnTableCreate = 1 << 21;
+pub const EcsTableHasOnTableDelete = 1 << 22;
+pub const EcsTableHasSparse = 1 << 23;
+pub const EcsTableHasUnion = 1 << 24;
 
 pub const EcsTableHasTraversable = 1 << 26;
 pub const EcsTableMarkedForDelete = 1 << 30;
@@ -153,6 +154,9 @@ pub const EcsTableHasLifecycle = EcsTableHasCtors | EcsTableHasDtors;
 pub const EcsTableIsComplex = EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse;
 pub const EcsTableHasAddActions = EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet;
 pub const EcsTableHasRemoveActions = EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove;
+pub const EcsTableEdgeFlags = EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion;
+pub const EcsTableAddEdgeFlags = EcsTableHasOnAdd | EcsTableHasSparse | EcsTableHasUnion;
+pub const EcsTableRemoveEdgeFlags = EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion;
 
 // Aperiodic action flags (used by ecs_run_aperiodic)
 
@@ -453,6 +457,34 @@ pub const system_desc_t = extern struct {
 pub const system_init = ecs_system_init;
 extern fn ecs_system_init(world: *world_t, desc: *const system_desc_t) entity_t;
 
+pub const system_t = extern struct {
+    hdr: header_t,
+    run: run_action_t,
+    action: iter_action_t,
+    query: *query_t,
+    query_entity: entity_t,
+    tick_source: entity_t,
+    multi_threaded: bool,
+    immediate: bool,
+    name: [*:0]const u8,
+    ctx: ?*anyopaque,
+    callback_ctx: ?*anyopaque,
+    run_ctx: ?*anyopaque,
+    ctx_free: ctx_free_t,
+    callback_ctx_free: ctx_free_t,
+    run_ctx_free: ctx_free_t,
+    time_spent: ftime_t,
+    time_passed: ftime_t,
+    last_frame: i64,
+    world: *world_t,
+    entity: entity_t,
+    dtor: poly_dtor_t,
+};
+
+/// `pub fn system_get(world: *world_t, system: entity_t) *const system_t`
+pub const system_get = ecs_system_get;
+extern fn ecs_system_get(world: *world_t, system: entity_t) *const system_t;
+
 //--------------------------------------------------------------------------------------------------
 //
 // Query descriptor types.
@@ -530,6 +562,7 @@ pub const query_t = extern struct {
 
     // /* Bitmasks for quick field information lookups */
     fixed_fields: termset_t = 0,
+    var_fields: termset_t = 0,
     static_id_fields: termset_t = 0,
     data_fields: termset_t = 0,
     write_fields: termset_t = 0,
@@ -591,10 +624,14 @@ pub const type_hooks_t = extern struct {
     on_add: ?iter_action_t = null,
     on_set: ?iter_action_t = null,
     on_remove: ?iter_action_t = null,
+
     ctx: ?*anyopaque = null,
     binding_ctx: ?*anyopaque = null,
+    lifecycle_ctx: ?*anyopaque = null,
+
     ctx_free: ?ctx_free_t = null,
     binding_ctx_free: ?ctx_free_t = null,
+    lifecycle_ctx_free: ?ctx_free_t = null,
 };
 
 pub const type_info_t = extern struct {
@@ -1025,6 +1062,7 @@ pub const world_info_t = extern struct {
 
     frame_count_total: i64,
     merge_count_total: i64,
+    eval_comp_monitors_total: i64,
     rematch_count_total: i64,
 
     id_create_total: i64,
@@ -1559,7 +1597,7 @@ extern fn ecs_ref_init_id(world: *const world_t, entity: entity_t, id: id_t) ref
 pub const ref_get_id = ecs_ref_get_id;
 extern fn ecs_ref_get_id(world: *const world_t, ref: *ref_t, id: id_t) ?*anyopaque;
 
-/// `pub fn ref_get_id(world: *const world_t, ref: *ref_t) void`
+/// `pub fn ref_update(world: *const world_t, ref: *ref_t) void`
 pub const ref_update = ecs_ref_update;
 extern fn ecs_ref_update(world: *const world_t, ref: *ref_t) void;
 
@@ -1898,6 +1936,15 @@ extern fn ecs_id_flag_str(id_flags: id_t) ?[*:0]const u8;
 /// `pub fn id_str(world: *const world_t, id: id_t) ?[*]u8`
 pub const id_str = ecs_id_str;
 extern fn ecs_id_str(world: *const world_t, id: id_t) ?[*:0]u8;
+
+/// `pub fn id_str_buf(world: *const world_t, id: id_t, buf: *strbuf_t)`
+pub const id_str_buf = ecs_id_str_buf;
+extern fn ecs_id_str_buf(world: *const world_t, id: id_t, buf: *strbuf_t) void;
+
+/// `pub fn id_from_str(world: *const world_t, expr:[*:0]const u8) id_t`
+pub const id_from_str = ecs_id_from_str;
+extern fn ecs_id_from_str(world: *const world_t, expr: [*:0]const u8) id_t;
+
 //--------------------------------------------------------------------------------------------------
 //
 // Functions for working with `term_t` and `query_t`.
@@ -2816,6 +2863,25 @@ extern fn ecs_os_get_api() os.api_t;
 pub const os_set_api = ecs_os_set_api;
 extern fn ecs_os_set_api(api: *os.api_t) void;
 
+pub const strbuf_list_elem_t = extern struct {
+    count: i32,
+    separator: ?[*:0]const u8,
+};
+
+pub const strbuf_t = extern struct {
+    const MAX_LIST_DEPTH = 32;
+    const SMALL_STRING_SIZE = 512;
+
+    content: [*:0]u8,
+    length: size_t,
+    size: size_t,
+
+    list_stack: [MAX_LIST_DEPTH]strbuf_list_elem_t,
+    list_sp: i32,
+
+    small_string: [SMALL_STRING_SIZE]u8,
+};
+
 pub const time_t = extern struct {
     sec: u32,
     nanosec: u32,
@@ -2863,6 +2929,7 @@ pub const os = struct {
     pub const api_dlproc_t = *const fn (dl_t, [*:0]const u8) callconv(.C) proc_t;
     pub const api_dlclose_t = *const fn (dl_t) callconv(.C) void;
     pub const api_module_to_path_t = *const fn ([*:0]const u8) callconv(.C) [*:0]u8;
+    pub const api_perf_trace_t = *const fn ([*:0]const u8, usize, [*:0]const u8) callconv(.C) void;
 
     const api_t = extern struct {
         init_: api_init_t,
@@ -2900,6 +2967,8 @@ pub const os = struct {
         dlclose_: api_dlclose_t,
         module_to_dl_: api_module_to_path_t,
         module_to_etc_: api_module_to_path_t,
+        perf_trace_push: api_perf_trace_t,
+        perf_trace_pop: api_perf_trace_t,
         log_level_: i32,
         log_indent_: i32,
         log_last_error_: i32,
