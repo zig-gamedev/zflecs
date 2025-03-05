@@ -575,9 +575,9 @@ pub const term_t = extern struct {
 pub const query_t = extern struct {
     hdr: header_t = .{},
 
-    terms: [FLECS_TERM_COUNT_MAX]term_t = .{.{}} ** FLECS_TERM_COUNT_MAX,
-    sizes: [FLECS_TERM_COUNT_MAX]size_t = .{0} ** FLECS_TERM_COUNT_MAX,
-    ids: [FLECS_TERM_COUNT_MAX]id_t = .{0} ** FLECS_TERM_COUNT_MAX,
+    terms: [FLECS_TERM_COUNT_MAX]term_t = @splat(.{}),
+    sizes: [FLECS_TERM_COUNT_MAX]size_t = @splat(0),
+    ids: [FLECS_TERM_COUNT_MAX]id_t = @splat(0),
 
     flags: flags32_t = 0,
     var_count: i8 = 0,
