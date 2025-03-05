@@ -1,5 +1,6 @@
 .{
-    .name = "zflecs",
+    .name = .zflecs,
+    .fingerprint = 0xb539547bca77f3d4,
     .version = "0.2.0-dev",
     .paths = .{
         "build.zig",
