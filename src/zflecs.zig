@@ -2686,8 +2686,14 @@ fn SystemImpl(comptime fn_system: anytype) type {
                 args_tuple[i] = field(it, @typeInfo(p.type.?).pointer.child, i - start_index).?;
             }
 
-            //NOTE: .always_inline seems ok, but unsure. Replace to .auto if it breaks
-            _ = @call(.always_inline, fn_system, args_tuple);
+            // NOTE: In theory there is no reason not to use .always_inline
+            // here, but in practice it results in a worse debugging experience
+            // as of Zig 0.14.0.
+            //
+            // For example, on Windows crashes inside fn_system are attributed
+            // to this @call, and it is not possible to set breakpoints on code
+            // inside fn_system.
+            _ = @call(.auto, fn_system, args_tuple);
         }
     };
 }
