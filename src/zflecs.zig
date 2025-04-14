@@ -3117,6 +3117,11 @@ pub fn delete_children(world: *world_t, parent: entity_t) void {
 pub const import_c = ecs_import_c;
 extern fn ecs_import_c(world: *world_t, module: module_action_t, module_name_c: [*:0]const u8) entity_t;
 
+/// `pub fn module_init(world: *world_t, c_name: [*:0]const u8, desc: *component_desc_t) entity_t`
+pub const module_init = ecs_module_init;
+extern fn ecs_module_init(world: *world_t, c_name: [*:0]const u8, desc: *component_desc_t) entity_t;
+
+
 //--------------------------------------------------------------------------------------------------
 //
 // FLECS_STATS

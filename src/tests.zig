@@ -517,3 +517,30 @@ test "zflecs.struct-dtor-hook" {
     // commented out since the cleanup is never called to free the ArrayList
     // memory.
 }
+fn module(world: *ecs.world_t) callconv(.C) void {
+    var desc = ecs.component_desc_t{ .entity = 0, .type = .{ .size = 0, .alignment = 0 } };
+    _ = ecs.module_init(world, "SimpleModule", &desc);
+
+    ecs.COMPONENT(world, Position);
+    ecs.COMPONENT(world, Velocity);
+}
+test "zflecs-module" {
+    const world = ecs.init();
+    defer _ = ecs.fini(world);
+
+    const module_id = ecs.import_c(world, module, "SimpleModule");
+
+    try expect(module_id != 0);
+
+    _ = ecs.ADD_SYSTEM(world, "move system", ecs.OnUpdate, move_system);
+
+    const bob = ecs.new_entity(world, "Bob");
+    _ = ecs.set(world, bob, Position, .{ .x = 0, .y = 0 });
+    _ = ecs.set(world, bob, Velocity, .{ .x = 1, .y = 2 });
+
+    _ = ecs.progress(world, 0);
+    _ = ecs.progress(world, 0);
+
+    const p = ecs.get(world, bob, Position).?;
+    print("Bob's position is ({d}, {d})\n", .{ p.x, p.y });
+}
