@@ -741,22 +741,24 @@ pub const type_info_t = extern struct {
 
 pub const event_id_record_t = opaque {};
 
-pub const event_record_t = extern struct {
-    any: ?*event_id_record_t,
-    wildcard: ?*event_id_record_t,
-    wildcard_pair: ?*event_id_record_t,
-    event_ids: map_t,
-    event: entity_t,
-};
+pub const event_record_t = anyopaque;
+// pub const event_record_t = extern struct {
+//     any: ?*event_id_record_t,
+//     wildcard: ?*event_id_record_t,
+//     wildcard_pair: ?*event_id_record_t,
+//     event_ids: map_t,
+//     event: entity_t,
+// };
 
-pub const observable_t = extern struct {
-    on_add: event_record_t,
-    on_remove: event_record_t,
-    on_set: event_record_t,
-    on_wildcard: event_record_t,
-    events: sparse_t,
-    last_observer_id: u64,
-};
+pub const observable_t = anyopaque;
+// pub const observable_t = extern struct {
+//     on_add: event_record_t,
+//     on_remove: event_record_t,
+//     on_set: event_record_t,
+//     on_wildcard: event_record_t,
+//     events: sparse_t,
+//     last_observer_id: u64,
+// };
 
 pub const table_range_t = extern struct {
     table: ?*table_t,
@@ -875,7 +877,7 @@ pub const vec_t = extern struct {
     count: i32,
     size: i32,
     elem_size: if (flecs_is_sanitize) size_t else void,
-    type_name: if (flecs_is_sanitize) [:*0]const u8 else void,
+    type_name: if (flecs_is_sanitize) [*:0]const u8 else void,
 };
 
 pub const sparse_t = extern struct {
@@ -927,13 +929,16 @@ pub const bucket_t = extern struct {
     first: [*c]bucket_entry_t,
 };
 
-pub const map_t = extern struct {
-    buckets: [*]bucket_t,
-    bucket_count: i32,
-    count: u26,
-    bucket_shift: u6,
-    allocator: *allocator_t,
-};
+pub const map_t = anyopaque;
+// pub const map_t = extern struct {
+//     buckets: [*]bucket_t,
+//     bucket_count: i32,
+//     x: packed struct {
+//         count: u26,
+//         bucket_shift: u6,
+//     },
+//     allocator: *allocator_t,
+// };
 
 pub const map_iter_t = extern struct {
     map: [*c]const map_t,
@@ -955,11 +960,6 @@ pub const switch_node_t = extern struct {
 pub const switch_page_t = extern struct {
     nodes: vec_t,
     values: vec_t,
-};
-
-pub const switch_t = extern struct {
-    hdrs: map_t,
-    pages: vec_t,
 };
 
 //--------------------------------------------------------------------------------------------------
@@ -3152,12 +3152,6 @@ pub const os = struct {
     }
 };
 
-//--------------------------------------------------------------------------------------------------
-//
-// ADDONS
-//
-//--------------------------------------------------------------------------------------------------
-
 // ecs_new_w_pair
 pub fn new_w_pair(world: *world_t, first: entity_t, second: entity_t) entity_t {
     const pair_id = make_pair(first, second);
@@ -3168,6 +3162,13 @@ pub fn new_w_pair(world: *world_t, first: entity_t, second: entity_t) entity_t {
 pub fn delete_children(world: *world_t, parent: entity_t) void {
     delete_with(world, make_pair(ChildOf, parent));
 }
+
+
+//--------------------------------------------------------------------------------------------------
+//
+// ADDONS
+//
+//--------------------------------------------------------------------------------------------------
 
 //--------------------------------------------------------------------------------------------------
 //
@@ -3185,11 +3186,175 @@ extern fn ecs_module_init(world: *world_t, c_name: [*:0]const u8, desc: *compone
 
 //--------------------------------------------------------------------------------------------------
 //
+// FLECS_META
+//
+//--------------------------------------------------------------------------------------------------
+
+pub extern fn FlecsMetaImport(world: *world_t) void;
+
+pub const ecs_bool_t = bool;
+pub const ecs_char_t = i8;
+pub const ecs_byte_t = u8;
+pub const ecs_u8_t = u8;
+pub const ecs_u16_t = u16;
+pub const ecs_u32_t = u32;
+pub const ecs_u64_t = u64;
+pub const ecs_uptr_t = usize;
+pub const ecs_i8_t = i8;
+pub const ecs_i16_t = i16;
+pub const ecs_i32_t = i32;
+pub const ecs_i64_t = i64;
+pub const ecs_iptr_t = isize;
+pub const ecs_f32_t = f32;
+pub const ecs_f64_t = f64;
+pub const ecs_string_t = [*:0]u8;
+
+pub extern const FLECS_IDecs_bool_tID_: entity_t;
+pub extern const FLECS_IDecs_char_tID_: entity_t;
+pub extern const FLECS_IDecs_byte_tID_: entity_t;
+pub extern const FLECS_IDecs_u8_tID_: entity_t;
+pub extern const FLECS_IDecs_u16_tID_: entity_t;
+pub extern const FLECS_IDecs_u32_tID_: entity_t;
+pub extern const FLECS_IDecs_u64_tID_: entity_t;
+pub extern const FLECS_IDecs_uptr_tID_: entity_t;
+pub extern const FLECS_IDecs_i8_tID_: entity_t;
+pub extern const FLECS_IDecs_i16_tID_: entity_t;
+pub extern const FLECS_IDecs_i32_tID_: entity_t;
+pub extern const FLECS_IDecs_i64_tID_: entity_t;
+pub extern const FLECS_IDecs_iptr_tID_: entity_t;
+pub extern const FLECS_IDecs_f32_tID_: entity_t;
+pub extern const FLECS_IDecs_f64_tID_: entity_t;
+pub extern const FLECS_IDecs_string_tID_: entity_t;
+pub extern const FLECS_IDecs_entity_tID_: entity_t;
+pub extern const FLECS_IDecs_id_tID_: entity_t;
+
+pub const ECS_MEMBER_DESC_CACHE_SIZE = 32;
+
+pub const member_value_range_t = extern struct {
+    min: f64 = 0,
+    max: f64 = 0,
+};
+
+pub const member_t = extern struct {
+    name: [*:0]const u8 = "",
+    type: entity_t = 0,
+    count: i32 = 0,
+    offset: i32 = 0,
+    unit: entity_t = 0,
+    use_offset: bool = false,
+    range: member_value_range_t = .{},
+    error_range: member_value_range_t = .{},
+    warning_range: member_value_range_t = .{},
+    size: size_t = 0,
+    member: entity_t = 0,
+};
+
+pub const struct_desc_t = extern struct {
+    entity: entity_t,
+    members: [ECS_MEMBER_DESC_CACHE_SIZE]member_t,
+};
+
+pub const struct_init = ecs_struct_init;
+extern fn ecs_struct_init(world: *world_t, desc: struct_desc_t) entity_t;
+
+//--------------------------------------------------------------------------------------------------
+//
+// FLECS_SCRIPT
+//
+//--------------------------------------------------------------------------------------------------
+
+pub extern fn FlecsScriptImport(world: *world_t) void;
+
+pub const script_t = extern struct {
+    world: *world_t,
+    name: [*:0]const u8,
+    code: [*:0]const u8,
+};
+
+pub const script_var_t = extern struct {
+    name: [*:0]const u8,
+    value: value_t,
+    type_info: *const type_info_t,
+    sp: i32,
+    is_const: bool,
+};
+
+pub const script_vars_t = anyopaque;
+// pub const script_vars_t = extern struct {
+//     parent: ?*script_vars_t,
+//     sp: i32,
+
+//     var_index: hashmap_t,
+//     vars: vec_t,
+
+//     world: *const world_t,
+//     stack: *stack_t,
+//     cursor: *stack_cursor_t,
+//     allocator: *allocator_t,
+// };
+
+pub const script_runtime_t = anyopaque;
+
+pub const script_eval_desc_t = extern struct {
+    vars: *script_vars_t,
+    runtime: ?*script_runtime_t = null,
+};
+
+pub const script_parse = ecs_script_parse;
+extern fn ecs_script_parse(world: *world_t, name: [*:0]const u8, code: [*:0]const u8, desc: ?*const script_eval_desc_t) ?*script_t;
+
+pub const script_eval = ecs_script_eval;
+extern fn ecs_script_eval(script: *const script_t, desc: ?*const script_eval_desc_t) c_int;
+
+pub const script_free = ecs_script_free;
+extern fn ecs_script_free(script: *script_t) void;
+
+pub const script_run = ecs_script_run;
+extern fn ecs_script_run(world: *world_t, name: [*:0]const u8, code: [*:0]const u8, desc: ?*const script_eval_desc_t) c_int;
+
+pub const script_runtime_new = ecs_script_runtime_new;
+extern fn ecs_script_runtime_new() *script_runtime_t;
+
+pub const script_runtime_free = ecs_script_runtime_free;
+extern fn ecs_script_runtime_free(runtime: *script_runtime_t) void;
+
+pub const script_ast_to_buf = ecs_script_ast_to_buf;
+extern fn ecs_script_ast_to_buf(script: *script_t, buf: *strbuf_t, colors: bool) void;
+
+pub const script_ast_to_str = ecs_script_ast_to_str;
+extern fn ecs_script_ast_to_str(script: *script_t, colors: bool) void;
+
+// Vars
+
+pub const script_vars_init = ecs_script_vars_init;
+extern fn ecs_script_vars_init(world: *world_t) *script_vars_t;
+
+pub const script_vars_fini = ecs_script_vars_fini;
+extern fn ecs_script_vars_fini(vars: *script_vars_t) void;
+
+pub const script_vars_push = ecs_script_vars_push;
+extern fn ecs_script_vars_push(vars: ?*script_vars_t) *script_vars_t;
+
+pub const script_vars_pop = ecs_script_vars_pop;
+extern fn ecs_script_vars_pop(vars: *script_vars_t) *script_vars_t;
+
+pub const script_vars_declare = ecs_script_vars_declare;
+extern fn ecs_script_vars_declare(vars: *script_vars_t, name: [*:0]const u8) ?*script_var_t;
+
+pub const script_vars_define_id = ecs_script_vars_define_id;
+extern fn ecs_script_vars_define_id(vars: *script_vars_t, name: [*:0]const u8, @"type": entity_t) ?*script_var_t;
+pub fn script_vars_define(vars: *script_vars_t, name: [*:0]const u8, T: type) ?*script_var_t {
+    return script_vars_define_id(vars, name, id(T));
+}
+
+//--------------------------------------------------------------------------------------------------
+//
 // FLECS_STATS
 //
 //--------------------------------------------------------------------------------------------------
 
 pub extern fn FlecsStatsImport(world: *world_t) void;
+
 //--------------------------------------------------------------------------------------------------
 //
 // FLECS_REST
