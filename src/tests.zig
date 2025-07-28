@@ -74,10 +74,10 @@ test "zflecs.entities.basics" {
     const ptr = ecs.get(world, bob, Position).?;
     print("({d}, {d})\n", .{ ptr.x, ptr.y });
 
-    _ = ecs.set(world, bob, Position, .{ .x = 20, .y = 30 });
+    _ = ecs.set(world, bob, Position, .{ .x = 10, .y = 30 });
 
     const alice = ecs.set_name(world, 0, "Alice");
-    _ = ecs.set(world, alice, Position, .{ .x = 10, .y = 20 });
+    _ = ecs.set(world, alice, Position, .{ .x = 10, .y = 50 });
     ecs.add(world, alice, Walking);
 
     const str = ecs.type_str(world, ecs.get_type(world, alice)).?;
@@ -87,11 +87,11 @@ test "zflecs.entities.basics" {
     ecs.remove(world, alice, Walking);
 
     {
-        var term = ecs.term_t{ .id = ecs.id(Position) };
-        var it = ecs.each(world, &term);
+        var it = ecs.each(world, Position);
         while (ecs.each_next(&it)) {
             if (ecs.field(&it, Position, 0)) |positions| {
                 for (positions, it.entities()) |p, e| {
+                    try std.testing.expectEqual(p.x, 10);
                     print(
                         "Term loop: {s}: ({d}, {d})\n",
                         .{ ecs.get_name(world, e).?, p.x, p.y },
