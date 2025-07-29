@@ -2087,9 +2087,14 @@ extern fn ecs_id_from_str(world: *const world_t, expr: [*:0]const u8) id_t;
 // Functions for working with `term_t` and `query_t`.
 //
 //--------------------------------------------------------------------------------------------------
-/// `pub fn term_iter(world: *const world_t, term: *term_t) iter_t`
-pub const each = ecs_each_id;
-extern fn ecs_each_id(world: *const world_t, term: *term_t) iter_t;
+
+pub fn each(world: *const world_t, comptime T: type) iter_t {
+    return each_id(world, id(T));
+}
+
+/// `pub fn ecs_each_id(world: *const world_t, id: id_t) iter_t`
+pub const each_id = ecs_each_id;
+extern fn ecs_each_id(world: *const world_t, id: id_t) iter_t;
 
 /// `pub fn term_chain_iter(world: *const world_t, term: *term_t) iter_t`
 pub const term_chain_iter = ecs_term_chain_iter;
