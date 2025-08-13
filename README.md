@@ -56,8 +56,8 @@ pub fn main() !void {
     ecs.TAG(world, Eats);
     ecs.TAG(world, Apples);
 
-    ecs.ADD_SYSTEM(world, "move system", ecs.OnUpdate, move_system);
-    ecs.ADD_SYSTEM(world, "move system with iterator", ecs.OnUpdate, move_system_with_it);
+    _ = ecs.ADD_SYSTEM(world, "move system", ecs.OnUpdate, move_system);
+    _ = ecs.ADD_SYSTEM(world, "move system with iterator", ecs.OnUpdate, move_system_with_it);
 
     const bob = ecs.new_entity(world, "Bob");
     _ = ecs.set(world, bob, Position, .{ .x = 0, .y = 0 });
