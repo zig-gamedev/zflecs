@@ -4,22 +4,14 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
     const target = b.standardTargetOptions(.{});
     const opt_use_shared = b.option(bool, "shared", "Make shared (default: false)") orelse false;
-    _ = b.addModule("root", .{
-        .root_source_file = b.path("src/zflecs.zig"),
-    });
 
-    const flecs = if (opt_use_shared) b.addSharedLibrary(.{
-        .name = "flecs",
-        .target = target,
-        .optimize = optimize,
-    }) else b.addStaticLibrary(.{
-        .name = "flecs",
+    const module = b.addModule("root", .{
+        .root_source_file = b.path("src/zflecs.zig"),
         .target = target,
         .optimize = optimize,
     });
-    flecs.linkLibC();
-    flecs.addIncludePath(b.path("libs/flecs"));
-    flecs.addCSourceFile(.{
+    module.addIncludePath(b.path("libs/flecs"));
+    module.addCSourceFile(.{
         .file = b.path("libs/flecs/flecs.c"),
         .flags = &.{
             "-fno-sanitize=undefined",
@@ -29,24 +21,32 @@ pub fn build(b: *std.Build) void {
             if (opt_use_shared) "-DFLECS_SHARED" else "",
         },
     });
-    b.installArtifact(flecs);
+
+    const lib = b.addLibrary(.{
+        .name = "flecs",
+        .linkage = if (opt_use_shared) .dynamic else .static,
+        .root_module = module,
+    });
+    lib.linkLibC();
+    b.installArtifact(lib);
 
     if (target.result.os.tag == .windows) {
-        flecs.linkSystemLibrary("ws2_32");
+        lib.linkSystemLibrary("ws2_32");
     }
     const test_step = b.step("test", "Run zflecs tests");
 
     const tests = b.addTest(.{
         .name = "zflecs-tests",
-        .root_source_file = b.path("src/tests.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/tests.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
-    tests.linkLibC();
     tests.addIncludePath(b.path("libs/flecs"));
+    tests.linkLibrary(lib);
+    tests.linkLibC();
     b.installArtifact(tests);
-
-    tests.linkLibrary(flecs);
 
     test_step.dependOn(&b.addRunArtifact(tests).step);
 }
