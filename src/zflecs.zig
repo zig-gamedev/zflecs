@@ -407,20 +407,20 @@ pub const table_record_t = anyopaque;
 // Function types.
 //
 //--------------------------------------------------------------------------------------------------
-pub const run_action_t = *const fn (it: *iter_t) callconv(.C) void;
+pub const run_action_t = *const fn (it: *iter_t) callconv(.c) void;
 
-pub const iter_action_t = *const fn (it: *iter_t) callconv(.C) void;
+pub const iter_action_t = *const fn (it: *iter_t) callconv(.c) void;
 
-pub const iter_next_action_t = *const fn (it: *iter_t) callconv(.C) bool;
+pub const iter_next_action_t = *const fn (it: *iter_t) callconv(.c) bool;
 
-pub const iter_fini_action_t = *const fn (it: *iter_t) callconv(.C) void;
+pub const iter_fini_action_t = *const fn (it: *iter_t) callconv(.c) void;
 
 pub const order_by_action_t = *const fn (
     e1: entity_t,
     ptr1: *const anyopaque,
     e2: entity_t,
     ptr2: *const anyopaque,
-) callconv(.C) i32;
+) callconv(.c) i32;
 
 pub const sort_table_action_t = *const fn (
     world: *world_t,
@@ -431,74 +431,74 @@ pub const sort_table_action_t = *const fn (
     lo: i32,
     hi: i32,
     order_by: ?order_by_action_t,
-) callconv(.C) void;
+) callconv(.c) void;
 
 pub const group_by_action_t = *const fn (
     world: *world_t,
     table: *table_t,
     group_id: id_t,
     ctx: ?*anyopaque,
-) callconv(.C) u64;
+) callconv(.c) u64;
 
 pub const group_create_action_t = *const fn (
     world: *world_t,
     group_id: u64,
     group_by_ctx: ?*anyopaque,
-) callconv(.C) ?*anyopaque;
+) callconv(.c) ?*anyopaque;
 
 pub const group_delete_action_t = *const fn (
     world: *world_t,
     group_id: u64,
     group_ctx: ?*anyopaque,
     group_by_ctx: ?*anyopaque,
-) callconv(.C) void;
+) callconv(.c) void;
 
-pub const module_action_t = *const fn (world: *world_t) callconv(.C) void;
+pub const module_action_t = *const fn (world: *world_t) callconv(.c) void;
 
-pub const fini_action_t = *const fn (world: *world_t, ctx: ?*anyopaque) callconv(.C) void;
+pub const fini_action_t = *const fn (world: *world_t, ctx: ?*anyopaque) callconv(.c) void;
 
-pub const ctx_free_t = *const fn (ctx: ?*anyopaque) callconv(.C) void;
+pub const ctx_free_t = *const fn (ctx: ?*anyopaque) callconv(.c) void;
 
 pub const compare_action_t = *const fn (
     ptr1: *const anyopaque,
     ptr2: *const anyopaque,
-) callconv(.C) i32;
+) callconv(.c) i32;
 
-pub const hash_value_action_t = *const fn (ptr: ?*const anyopaque) callconv(.C) u64;
+pub const hash_value_action_t = *const fn (ptr: ?*const anyopaque) callconv(.c) u64;
 
 pub const xtor_t = *const fn (
     ptr: *anyopaque,
     count: i32,
     type_info: *const type_info_t,
-) callconv(.C) void;
+) callconv(.c) void;
 
 pub const copy_t = *const fn (
     dst_ptr: *anyopaque,
     src_ptr: *const anyopaque,
     count: i32,
     type_info: *const type_info_t,
-) callconv(.C) void;
+) callconv(.c) void;
 
 pub const move_t = *const fn (
     dst_ptr: *anyopaque,
     src_ptr: *anyopaque,
     count: i32,
     type_info: *const type_info_t,
-) callconv(.C) void;
+) callconv(.c) void;
 
 pub const cmp_t = *const fn (
     a_ptr: *const anyopaque,
     b_ptr: *const anyopaque,
     type_info: *const type_info_t,
-) callconv(.C) c_int;
+) callconv(.c) c_int;
 
 pub const equals_t = *const fn (
     a_ptr: *const anyopaque,
     b_ptr: *const anyopaque,
     type_info: *const type_info_t,
-) callconv(.C) bool;
+) callconv(.c) bool;
 
-pub const poly_dtor_t = *const fn (poly: *poly_t) callconv(.C) void;
+pub const poly_dtor_t = *const fn (poly: *poly_t) callconv(.c) void;
 
 pub const system_desc_t = extern struct {
     _canary: i32 = 0,
@@ -1057,7 +1057,7 @@ pub const iter_t = extern struct {
     priv_: iter_private_t,
 
     next: iter_next_action_t,
-    callback: *const fn (it: *iter_t) callconv(.C) void, // TODO: Compiler bug. Should be `iter_action_t`.
+    callback: *const fn (it: *iter_t) callconv(.c) void, // TODO: Compiler bug. Should be `iter_action_t`.
     fini: iter_fini_action_t,
     chain_it: ?*iter_t,
 
@@ -1218,14 +1218,14 @@ const EcsAllocator = struct {
     var gpa: ?std.heap.GeneralPurposeAllocator(.{}) = null;
     var allocator: ?std.mem.Allocator = null;
 
-    fn alloc(size: i32) callconv(.C) ?*anyopaque {
+    fn alloc(size: i32) callconv(.c) ?*anyopaque {
         if (size < 0) {
             return null;
         }
 
         const allocation_size = Alignment + @as(usize, @intCast(size));
 
-        const data = allocator.?.alignedAlloc(u8, Alignment, allocation_size) catch {
+        const data = allocator.?.alignedAlloc(u8, .fromByteUnits(Alignment), allocation_size) catch {
             return null;
         };
 
@@ -1239,7 +1239,7 @@ const EcsAllocator = struct {
         return data.ptr + Alignment;
     }
 
-    fn free(ptr: ?*anyopaque) callconv(.C) void {
+    fn free(ptr: ?*anyopaque) callconv(.c) void {
         if (ptr == null) {
             return;
         }
@@ -1254,7 +1254,7 @@ const EcsAllocator = struct {
         );
     }
 
-    fn realloc(old: ?*anyopaque, size: i32) callconv(.C) ?*anyopaque {
+    fn realloc(old: ?*anyopaque, size: i32) callconv(.c) ?*anyopaque {
         if (old == null) {
             return alloc(size);
         }
@@ -1281,7 +1281,7 @@ const EcsAllocator = struct {
         return new_data.ptr + Alignment;
     }
 
-    fn calloc(size: i32) callconv(.C) ?*anyopaque {
+    fn calloc(size: i32) callconv(.c) ?*anyopaque {
         const data_maybe = alloc(size);
         if (data_maybe) |data| {
             @memset(@as([*]u8, @ptrCast(data))[0..@as(usize, @intCast(size))], 0);
@@ -1291,7 +1291,7 @@ const EcsAllocator = struct {
     }
 };
 
-fn flecs_abort() callconv(.C) noreturn {
+fn flecs_abort() callconv(.c) noreturn {
     std.debug.dumpCurrentStackTrace(@returnAddress());
     @breakpoint();
     std.posix.exit(1);
@@ -2656,8 +2656,8 @@ pub fn COMPONENT(world: *world_t, comptime T: type) void {
             .hooks = .{
                 .dtor = switch (@typeInfo(T)) {
                     .@"struct" => if (@hasDecl(T, "dtor")) struct {
-                        pub fn dtor(ptr: *anyopaque, _: i32, _: *const type_info_t) callconv(.C) void {
-                            T.dtor(@as(*T, @alignCast(@ptrCast(ptr))).*);
+                        pub fn dtor(ptr: *anyopaque, _: i32, _: *const type_info_t) callconv(.c) void {
+                            T.dtor(@as(*T, @ptrCast(@alignCast(ptr))));
                         }
                     }.dtor else null,
                     else => null,
@@ -2719,7 +2719,7 @@ pub fn OBSERVER(
 ///     }
 /// }
 /// Would return the following implementation
-/// fn exec(it: *ecs.iter_t) callconv(.C) void {
+/// fn exec(it: *ecs.iter_t) callconv(.c) void {
 ///     const c1 = ecs.field(it, Position, 0).?;
 ///     const c2 = ecs.field(it, Velocity, 1).?;
 ///     move_system(c1, c2);//probably inlined
@@ -2731,7 +2731,7 @@ fn SystemImpl(comptime fn_system: anytype) type {
     }
 
     return struct {
-        fn exec(it: *iter_t) callconv(.C) void {
+        fn exec(it: *iter_t) callconv(.c) void {
             const ArgsTupleType = std.meta.ArgsTuple(@TypeOf(fn_system));
             var args_tuple: ArgsTupleType = undefined;
 
@@ -3067,42 +3067,42 @@ pub const os = struct {
     pub const dl_t = usize;
     pub const sock_t = usize;
     pub const thread_id_t = u64;
-    pub const proc_t = *const fn () callconv(.C) void;
-    pub const api_init_t = *const fn () callconv(.C) void;
-    pub const api_fini_t = *const fn () callconv(.C) void;
-    pub const api_malloc_t = *const fn (size_t) callconv(.C) ?*anyopaque;
-    pub const api_free_t = *const fn (?*anyopaque) callconv(.C) void;
-    pub const api_realloc_t = *const fn (?*anyopaque, size_t) callconv(.C) ?*anyopaque;
-    pub const api_calloc_t = *const fn (size_t) callconv(.C) ?*anyopaque;
-    pub const api_strdup_t = *const fn ([*:0]const u8) callconv(.C) [*c]u8;
-    pub const thread_callback_t = *const fn (?*anyopaque) callconv(.C) ?*anyopaque;
-    pub const api_thread_new_t = *const fn (thread_callback_t, ?*anyopaque) callconv(.C) thread_t;
-    pub const api_thread_join_t = *const fn (thread_t) callconv(.C) ?*anyopaque;
-    pub const api_thread_self_t = *const fn () callconv(.C) thread_id_t;
-    pub const api_task_new_t = *const fn (thread_callback_t, ?*anyopaque) callconv(.C) thread_t;
-    pub const api_task_join_t = *const fn (thread_t) callconv(.C) ?*anyopaque;
-    pub const api_ainc_t = *const fn (*i32) callconv(.C) i32;
-    pub const api_lainc_t = *const fn (*i64) callconv(.C) i64;
-    pub const api_mutex_new_t = *const fn () callconv(.C) mutex_t;
-    pub const api_mutex_lock_t = *const fn (mutex_t) callconv(.C) void;
-    pub const api_mutex_unlock_t = *const fn (mutex_t) callconv(.C) void;
-    pub const api_mutex_free_t = *const fn (mutex_t) callconv(.C) void;
-    pub const api_cond_new_t = *const fn () callconv(.C) cond_t;
-    pub const api_cond_free_t = *const fn (cond_t) callconv(.C) void;
-    pub const api_cond_signal_t = *const fn (cond_t) callconv(.C) void;
-    pub const api_cond_broadcast_t = *const fn (cond_t) callconv(.C) void;
-    pub const api_cond_wait_t = *const fn (cond_t, mutex_t) callconv(.C) void;
-    pub const api_sleep_t = *const fn (i32, i32) callconv(.C) void;
-    pub const api_enable_high_timer_resolution_t = *const fn (bool) callconv(.C) void;
-    pub const api_get_time_t = *const fn (*time_t) callconv(.C) void;
-    pub const api_now_t = *const fn () callconv(.C) u64;
-    pub const api_log_t = *const fn (i32, [*:0]const u8, i32, [*:0]const u8) callconv(.C) void;
-    pub const api_abort_t = *const fn () callconv(.C) void;
-    pub const api_dlopen_t = *const fn ([*:0]const u8) callconv(.C) dl_t;
-    pub const api_dlproc_t = *const fn (dl_t, [*:0]const u8) callconv(.C) proc_t;
-    pub const api_dlclose_t = *const fn (dl_t) callconv(.C) void;
-    pub const api_module_to_path_t = *const fn ([*:0]const u8) callconv(.C) [*:0]u8;
-    pub const api_perf_trace_t = *const fn ([*:0]const u8, usize, [*:0]const u8) callconv(.C) void;
+    pub const proc_t = *const fn () callconv(.c) void;
+    pub const api_init_t = *const fn () callconv(.c) void;
+    pub const api_fini_t = *const fn () callconv(.c) void;
+    pub const api_malloc_t = *const fn (size_t) callconv(.c) ?*anyopaque;
+    pub const api_free_t = *const fn (?*anyopaque) callconv(.c) void;
+    pub const api_realloc_t = *const fn (?*anyopaque, size_t) callconv(.c) ?*anyopaque;
+    pub const api_calloc_t = *const fn (size_t) callconv(.c) ?*anyopaque;
+    pub const api_strdup_t = *const fn ([*:0]const u8) callconv(.c) [*c]u8;
+    pub const thread_callback_t = *const fn (?*anyopaque) callconv(.c) ?*anyopaque;
+    pub const api_thread_new_t = *const fn (thread_callback_t, ?*anyopaque) callconv(.c) thread_t;
+    pub const api_thread_join_t = *const fn (thread_t) callconv(.c) ?*anyopaque;
+    pub const api_thread_self_t = *const fn () callconv(.c) thread_id_t;
+    pub const api_task_new_t = *const fn (thread_callback_t, ?*anyopaque) callconv(.c) thread_t;
+    pub const api_task_join_t = *const fn (thread_t) callconv(.c) ?*anyopaque;
+    pub const api_ainc_t = *const fn (*i32) callconv(.c) i32;
+    pub const api_lainc_t = *const fn (*i64) callconv(.c) i64;
+    pub const api_mutex_new_t = *const fn () callconv(.c) mutex_t;
+    pub const api_mutex_lock_t = *const fn (mutex_t) callconv(.c) void;
+    pub const api_mutex_unlock_t = *const fn (mutex_t) callconv(.c) void;
+    pub const api_mutex_free_t = *const fn (mutex_t) callconv(.c) void;
+    pub const api_cond_new_t = *const fn () callconv(.c) cond_t;
+    pub const api_cond_free_t = *const fn (cond_t) callconv(.c) void;
+    pub const api_cond_signal_t = *const fn (cond_t) callconv(.c) void;
+    pub const api_cond_broadcast_t = *const fn (cond_t) callconv(.c) void;
+    pub const api_cond_wait_t = *const fn (cond_t, mutex_t) callconv(.c) void;
+    pub const api_sleep_t = *const fn (i32, i32) callconv(.c) void;
+    pub const api_enable_high_timer_resolution_t = *const fn (bool) callconv(.c) void;
+    pub const api_get_time_t = *const fn (*time_t) callconv(.c) void;
+    pub const api_now_t = *const fn () callconv(.c) u64;
+    pub const api_log_t = *const fn (i32, [*:0]const u8, i32, [*:0]const u8) callconv(.c) void;
+    pub const api_abort_t = *const fn () callconv(.c) void;
+    pub const api_dlopen_t = *const fn ([*:0]const u8) callconv(.c) dl_t;
+    pub const api_dlproc_t = *const fn (dl_t, [*:0]const u8) callconv(.c) proc_t;
+    pub const api_dlclose_t = *const fn (dl_t) callconv(.c) void;
+    pub const api_module_to_path_t = *const fn ([*:0]const u8) callconv(.c) [*:0]u8;
+    pub const api_perf_trace_t = *const fn ([*:0]const u8, usize, [*:0]const u8) callconv(.c) void;
 
     const api_t = extern struct {
         init_: api_init_t,
@@ -3167,7 +3167,6 @@ pub fn new_w_pair(world: *world_t, first: entity_t, second: entity_t) entity_t {
 pub fn delete_children(world: *world_t, parent: entity_t) void {
     delete_with(world, make_pair(ChildOf, parent));
 }
-
 
 //--------------------------------------------------------------------------------------------------
 //
