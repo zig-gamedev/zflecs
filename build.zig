@@ -607,12 +607,7 @@ pub fn build(b: *std.Build) void {
             if (addons.includeAddon(.units)) "-DFLECS_UNITS" else "",
             convertFloatPrecisonFlag(b.allocator, "ecs_float_t", opt_float_precision),
             convertFloatPrecisonFlag(b.allocator, "ecs_ftime_t", opt_scalar_time_precision),
-            if (opt_accurate_counters) "-DFLECS_ACCURATE_COUNTERS" else "",
-            if (opt_disable_counters) "-DFLECS_DISABLE_COUNTERS" else "",
             if (opt_debug_info) "-DFLECS_DEBUG_INFO" else "",
-            if (opt_soft_assert) "-DFLECS_SOFT_ASSERT" else "",
-            if (opt_keep_assert) "-DFLECS_KEEP_ASSERT" else "",
-            if (opt_default_to_uncached_queries) "-DFLECS_DEFAULT_TO_UNCACHED_QUERIES" else "",
             if (opt_no_always_inline) "-DFLECS_NO_ALWAYS_INLINE" else "",
             if (opt_low_footprint) "-DFLECS_LOW_FOOTPRINT" else "",
             if (opt_hi_component_id) |value|
