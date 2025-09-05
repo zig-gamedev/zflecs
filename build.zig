@@ -66,7 +66,7 @@ pub const CustomBuildMode = enum { blacklist, whitelist };
 
 pub const CustomBuildSet = std.EnumSet(FlecsAddons);
 
-fn convertFloatPrecisonFlag(alloc: std.mem.Allocator, name: []const u8, value: float_point_precision) []const u8 {
+fn convertFloatPrecisionFlag(alloc: std.mem.Allocator, name: []const u8, value: float_point_precision) []const u8 {
     const val = switch (value) {
         .fp32 => "float",
         .fp64 => "double",
@@ -272,7 +272,7 @@ pub fn build(b: *std.Build) void {
 
     const opt_app_addon = b.option(bool, "toggle_app_addon",
         \\
-        \\    Appication addons
+        \\    Application addons
         \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
     ) orelse false;
     addons.toggleAddon(.app, opt_app_addon);
@@ -605,10 +605,8 @@ pub fn build(b: *std.Build) void {
             if (addons.includeAddon(.stats)) "-DFLECS_STATS" else "",
             if (addons.includeAddon(.timer)) "-DFLECS_TIMER" else "",
             if (addons.includeAddon(.units)) "-DFLECS_UNITS" else "",
-            convertFloatPrecisonFlag(b.allocator, "ecs_float_t", opt_float_precision),
-            convertFloatPrecisonFlag(b.allocator, "ecs_ftime_t", opt_scalar_time_precision),
-            if (opt_debug_info) "-DFLECS_DEBUG_INFO" else "",
-            if (opt_no_always_inline) "-DFLECS_NO_ALWAYS_INLINE" else "",
+            convertFloatPrecisionFlag(b.allocator, "ecs_float_t", opt_float_precision),
+            convertFloatPrecisionFlag(b.allocator, "ecs_ftime_t", opt_scalar_time_precision),
             if (opt_low_footprint) "-DFLECS_LOW_FOOTPRINT" else "",
             if (opt_hi_component_id) |value|
                 convertSizeFlag(b.allocator, "FLECS_HI_COMPONENT_ID", value)
