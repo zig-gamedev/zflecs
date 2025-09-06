@@ -1,6 +1,7 @@
 const std = @import("std");
 const assert = std.debug.assert;
 const builtin = @import("builtin");
+const build_options = @import("build-options");
 
 pub const flecs_version = std.SemanticVersion{
     .major = 4,
@@ -8,11 +9,20 @@ pub const flecs_version = std.SemanticVersion{
     .patch = 5,
 };
 
-// TODO: flecs_is_sanitize should come from flecs build flags.
-const flecs_is_sanitize = builtin.mode == .Debug;
-const flecs_is_debug = flecs_is_sanitize or builtin.mode == .Debug;
+const flecs_is_sanitize = build_options.debug_mode == .sanitize or
+    (build_options.debug_mode == .depends_on_build and builtin.mode == .Debug);
+const flecs_is_debug = flecs_is_sanitize or build_options.debug_mode == .debug;
 
-pub const ftime_t = f32;
+fn FloatPrecisionType(precision: anytype) type {
+    return switch (precision) {
+        .fp32 => f32,
+        .fp64 => f64,
+        // .fp128 => f128, // TODO: Is this a valid precision for flecs (translates to long double on c)???
+    };
+}
+
+pub const float_t = FloatPrecisionType(build_options.float_precision);
+pub const ftime_t = FloatPrecisionType(build_options.scalar_time_precision);
 pub const size_t = i32;
 pub const flags8_t = u8;
 pub const flags16_t = u16;
@@ -57,17 +67,20 @@ pub const EcsEntityIsTraversable = 1 << 29;
 pub const EcsIdOnDeleteRemove = 1 << 0;
 pub const EcsIdOnDeleteDelete = 1 << 1;
 pub const EcsIdOnDeletePanic = 1 << 2;
-pub const EcsIdOnDeleteMask = (EcsIdOnDeletePanic | EcsIdOnDeleteRemove | EcsIdOnDeleteDelete);
+pub const EcsIdOnDeleteMask =
+    (EcsIdOnDeletePanic | EcsIdOnDeleteRemove | EcsIdOnDeleteDelete);
 
 pub const EcsIdOnDeleteObjectRemove = 1 << 3;
 pub const EcsIdOnDeleteObjectDelete = 1 << 4;
 pub const EcsIdOnDeleteObjectPanic = 1 << 5;
-pub const EcsIdOnDeleteObjectMask = (EcsIdOnDeleteObjectPanic | EcsIdOnDeleteObjectRemove | EcsIdOnDeleteObjectDelete);
+pub const EcsIdOnDeleteObjectMask =
+    (EcsIdOnDeleteObjectPanic | EcsIdOnDeleteObjectRemove | EcsIdOnDeleteObjectDelete);
 
 pub const EcsIdOnInstantiateOverride = 1 << 6;
 pub const EcsIdOnInstantiateInherit = 1 << 7;
 pub const EcsIdOnInstantiateDontInherit = 1 << 8;
-pub const EcsIdOnInstantiateMask = (EcsIdOnInstantiateOverride | EcsIdOnInstantiateInherit | EcsIdOnInstantiateDontInherit);
+pub const EcsIdOnInstantiateMask =
+    (EcsIdOnInstantiateOverride | EcsIdOnInstantiateInherit | EcsIdOnInstantiateDontInherit);
 
 pub const EcsIdExclusive = 1 << 9;
 pub const EcsIdTraversable = 1 << 10;
@@ -84,7 +97,8 @@ pub const EcsIdHasOnTableCreate = 1 << 21;
 pub const EcsIdHasOnTableDelete = 1 << 22;
 pub const EcsIdIsSparse = 1 << 23;
 pub const EcsIdIsUnion = 1 << 24;
-pub const EcsIdEventMask = (EcsIdHasOnAdd | EcsIdHasOnRemove | EcsIdHasOnSet | EcsIdHasOnTableCreate | EcsIdHasOnTableDelete | EcsIdIsSparse | EcsIdIsUnion);
+pub const EcsIdEventMask = (EcsIdHasOnAdd | EcsIdHasOnRemove | EcsIdHasOnSet |
+    EcsIdHasOnTableCreate | EcsIdHasOnTableDelete | EcsIdIsSparse | EcsIdIsUnion);
 
 pub const EcsIdMarkedForDelete = 1 << 30;
 
@@ -194,9 +208,11 @@ pub const EcsTableMarkedForDelete = 1 << 30;
 // Composite table flags
 pub const EcsTableHasLifecycle = EcsTableHasCtors | EcsTableHasDtors;
 pub const EcsTableIsComplex = EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse;
-pub const EcsTableHasAddActions = EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet;
+pub const EcsTableHasAddActions =
+    EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet;
 pub const EcsTableHasRemoveActions = EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove;
-pub const EcsTableEdgeFlags = EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion;
+pub const EcsTableEdgeFlags =
+    EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion;
 pub const EcsTableAddEdgeFlags = EcsTableHasOnAdd | EcsTableHasSparse | EcsTableHasUnion;
 pub const EcsTableRemoveEdgeFlags = EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion;
 
@@ -701,8 +717,16 @@ pub const ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL: flags32_t = 1 << 18;
 pub const ECS_TYPE_HOOK_CMP_ILLEGAL: flags32_t = 1 << 19;
 pub const ECS_TYPE_HOOK_EQUALS_ILLEGAL: flags32_t = 1 << 20;
 
-pub const ECS_TYPE_HOOKS: flags32_t = (ECS_TYPE_HOOK_CTOR | ECS_TYPE_HOOK_DTOR | ECS_TYPE_HOOK_COPY | ECS_TYPE_HOOK_MOVE | ECS_TYPE_HOOK_COPY_CTOR | ECS_TYPE_HOOK_MOVE_CTOR | ECS_TYPE_HOOK_CTOR_MOVE_DTOR | ECS_TYPE_HOOK_MOVE_DTOR | ECS_TYPE_HOOK_CMP | ECS_TYPE_HOOK_EQUALS);
-pub const ECS_TYPE_HOOKS_ILLEGAL: flags32_t = (ECS_TYPE_HOOK_CTOR_ILLEGAL | ECS_TYPE_HOOK_DTOR_ILLEGAL | ECS_TYPE_HOOK_COPY_ILLEGAL | ECS_TYPE_HOOK_MOVE_ILLEGAL | ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL | ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL | ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL | ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL | ECS_TYPE_HOOK_CMP_ILLEGAL | ECS_TYPE_HOOK_EQUALS_ILLEGAL);
+pub const ECS_TYPE_HOOKS: flags32_t = (ECS_TYPE_HOOK_CTOR | ECS_TYPE_HOOK_DTOR |
+    ECS_TYPE_HOOK_COPY | ECS_TYPE_HOOK_MOVE | ECS_TYPE_HOOK_COPY_CTOR | ECS_TYPE_HOOK_MOVE_CTOR |
+    ECS_TYPE_HOOK_CTOR_MOVE_DTOR | ECS_TYPE_HOOK_MOVE_DTOR | ECS_TYPE_HOOK_CMP |
+    ECS_TYPE_HOOK_EQUALS);
+
+pub const ECS_TYPE_HOOKS_ILLEGAL: flags32_t = (ECS_TYPE_HOOK_CTOR_ILLEGAL |
+    ECS_TYPE_HOOK_DTOR_ILLEGAL | ECS_TYPE_HOOK_COPY_ILLEGAL | ECS_TYPE_HOOK_MOVE_ILLEGAL |
+    ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL | ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL |
+    ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL | ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL |
+    ECS_TYPE_HOOK_CMP_ILLEGAL | ECS_TYPE_HOOK_EQUALS_ILLEGAL);
 
 pub const type_hooks_t = extern struct {
     ctor: ?xtor_t = null,
@@ -969,15 +993,18 @@ pub const value_t = extern struct {
     ptr: ?*anyopaque = null,
 };
 
-pub const FLECS_HI_COMPONENT_ID = 256;
-pub const FLECS_HI_ID_RECORD_ID = 1024;
-pub const FLECS_ID_DESC_MAX = 32;
-pub const FLECS_EVENT_DESC_MAX = 8;
-pub const FLECS_VARIABLE_COUNT_MAX = 64;
-pub const FLECS_TERM_COUNT_MAX = 32;
-pub const FLECS_TERM_ARG_COUNT_MAX = 16;
-pub const FLECS_QUERY_VARIABLE_COUNT_MAX = 64;
-pub const FLECS_QUERY_SCOPE_NESTING_MAX = 8;
+pub const FLECS_HI_COMPONENT_ID = build_options.hi_component_id orelse 256;
+pub const FLECS_HI_ID_RECORD_ID = build_options.hi_id_record_id orelse 1024;
+pub const FLECS_SPARSE_PAGE_BITS = build_options.sparse_page_bits orelse 6;
+pub const FLECS_ENTITY_PAGE_BITS = build_options.entity_page_bits orelse 12;
+pub const FLECS_ID_DESC_MAX = build_options.id_desc_max orelse 32;
+pub const FLECS_EVENT_DESC_MAX = build_options.event_desc_max orelse 8;
+pub const FLECS_VARIABLE_COUNT_MAX = build_options.variable_count_max orelse 64;
+pub const FLECS_TERM_COUNT_MAX = build_options.term_count_max orelse 32;
+pub const FLECS_TERM_ARG_COUNT_MAX = build_options.term_arg_count_max orelse 16;
+pub const FLECS_QUERY_VARIABLE_COUNT_MAX = build_options.query_variable_count_max orelse 64;
+pub const FLECS_QUERY_SCOPE_NESTING_MAX = build_options.query_scope_nesting_max orelse 8;
+pub const FLECS_DAG_DEPTH_MAX = build_options.dag_depth_max orelse 128;
 
 pub const entity_desc_t = extern struct {
     _canary: i32 = 0,
@@ -1045,8 +1072,8 @@ pub const iter_t = extern struct {
     callback_ctx: ?*anyopaque,
     run_ctx: ?*anyopaque,
 
-    delta_time: f32,
-    delta_system_time: f32,
+    delta_time: ftime_t,
+    delta_system_time: ftime_t,
 
     frame_offset: i32,
     offset: i32,
