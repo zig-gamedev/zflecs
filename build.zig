@@ -212,7 +212,7 @@ pub fn build(b: *std.Build) void {
     ) orelse false;
     options.addOption(bool, "keep_assert", opt_keep_assert);
 
-    const opt_default_to_uncached_queries = b.option(bool, "default_to_uncached_queries",
+    var opt_default_to_uncached_queries = b.option(bool, "default_to_uncached_queries",
         \\
         \\    When set, this will cause queries with the EcsQueryCacheDefault policy
         \\    to default to EcsQueryCacheNone. This can reduce the memory footprint of
@@ -436,8 +436,8 @@ pub fn build(b: *std.Build) void {
     if (opt_low_footprint) {
         hi_component_id_value = 16;
         hi_id_record_id_value = 16;
-        sparse_page_bits_value = 4;
         entity_page_bits_value = 6;
+        opt_default_to_uncached_queries = true;
     }
 
     const opt_hi_component_id = b.option(usize, "hi_component_id",
@@ -450,7 +450,10 @@ pub fn build(b: *std.Build) void {
         \\    Increasing this value increases the size of the lookup array, which allows
         \\    fast table traversal, which improves performance of ECS add/remove
         \\    operations. Component ids that fall outside of this range use a regular map
-        \\    lookup, which is slower but more memory efficient. */
+        \\    lookup, which is slower but more memory efficient.
+        \\
+        \\ This value must be set to a value that is a power of 2. Setting it to a value
+        \\ that is not a power of two will degrade performance.
     );
     if (!opt_low_footprint) {
         if (opt_hi_component_id) |value| hi_component_id_value = value;
@@ -492,6 +495,8 @@ pub fn build(b: *std.Build) void {
         \\    instead of the builtin block allocator. This can decrease memory utilization
         \\    as memory will be freed more often, at the cost of decreased performance. */
     ) orelse false;
+
+    options.addOption(bool, "use_os_alloc", opt_use_os_alloc);
 
     const opt_id_desc_max = b.option(usize, "id_desc_max",
         \\
