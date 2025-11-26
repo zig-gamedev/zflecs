@@ -1235,6 +1235,12 @@ pub const world_info_t = extern struct {
     name_prefix: [*:0]const u8,
 };
 
+pub const pipeline_desc_t = extern struct {
+    entity: entity_t,
+
+    query: query_desc_t = .{},
+};
+
 const EcsAllocator = struct {
     const AllocationHeader = struct {
         size: usize,
@@ -2831,6 +2837,12 @@ extern fn ecs_reset_clock(world: *world_t) void;
 /// `pub fn ecs_run_pipeline(world: *world_t, pipeline: entity_t, delta_time: ftime_t) void`
 pub const run_pipeline = ecs_run_pipeline;
 extern fn ecs_run_pipeline(world: *world_t, pipeline: entity_t, delta_time: ftime_t) void;
+
+pub const pipeline_init = ecs_pipeline_init;
+extern fn ecs_pipeline_init(world: *world_t, desc: *const pipeline_desc_t) entity_t;
+
+pub const set_pipeline = ecs_set_pipeline;
+extern fn ecs_set_pipeline(world: *world_t, pipeline: entity_t, delta_time: ftime_t) void;
 
 /// `pub fn ecs_set_threads(world: *world_t, threads: i32) void`
 pub const set_threads = ecs_set_threads;
