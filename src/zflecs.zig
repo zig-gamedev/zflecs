@@ -1236,7 +1236,7 @@ pub const world_info_t = extern struct {
 };
 
 pub const pipeline_desc_t = extern struct {
-    entity: entity_t = undefined,
+    entity: entity_t = 0,
 
     query: query_desc_t = .{},
 };
