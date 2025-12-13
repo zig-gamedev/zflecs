@@ -1344,6 +1344,7 @@ pub fn init() *world_t {
         os.ecs_os_api.calloc_ = &EcsAllocator.calloc;
 
         world_component_lookup = std.AutoHashMap(*const world_t, std.AutoHashMap(usize, id_t)).init(EcsAllocator.allocator.?);
+        first_world_pointers = std.AutoHashMap(*id_t, u0).init(EcsAllocator.allocator.?);
     }
 
     const world = ecs_init();
@@ -1442,6 +1443,16 @@ pub fn fini(world: *world_t) i32 {
     num_worlds -= 1;
 
     const fini_result = ecs_fini(world);
+
+    if (world == first_world) {
+        // Clear the stored ID's for the first world, so if another gets created later they don't get stale IDs
+        var it = first_world_pointers.iterator();
+        while (it.next()) |kv| {
+            const ptr = kv.key_ptr.*;
+            ptr.* = 0;
+        }
+        first_world_pointers.deinit();
+    }
 
     var component_type_lookup = world_component_lookup.getPtr(world);
     if (component_type_lookup != null) {
@@ -2856,6 +2867,8 @@ extern fn ecs_using_task_threads(world: *world_t) bool;
 
 var num_worlds: u32 = 0;
 var first_world: *world_t = undefined;
+var first_world_pointers: std.AutoHashMap(*id_t, u0) = undefined;
+
 var world_component_lookup: std.AutoHashMap(*const world_t, std.AutoHashMap(usize, id_t)) = undefined;
 
 pub fn COMPONENT(world: *world_t, comptime T: type) void {
@@ -2896,6 +2909,7 @@ pub fn COMPONENT(world: *world_t, comptime T: type) void {
     if (world == first_world) {
         const type_id_ptr = perTypeFirstVarPtr(T);
         type_id_ptr.* = component_id;
+        first_world_pointers.put(type_id_ptr, 0) catch @panic("OOM");
     }
 }
 
@@ -2918,6 +2932,7 @@ pub fn TAG(world: *world_t, comptime T: type) void {
     if (world == first_world) {
         const type_id_ptr = perTypeFirstVarPtr(T);
         type_id_ptr.* = type_id;
+        first_world_pointers.put(type_id_ptr, 0) catch @panic("OOM");
     }
 }
 
