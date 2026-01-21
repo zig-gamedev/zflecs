@@ -6,7 +6,7 @@ const build_options = @import("build-options");
 pub const flecs_version = std.SemanticVersion{
     .major = 4,
     .minor = 1,
-    .patch = 1,
+    .patch = 4,
 };
 
 const flecs_is_sanitize = build_options.debug_mode == .sanitize or
@@ -1139,7 +1139,7 @@ pub const observer_desc_t = extern struct {
     events: [FLECS_EVENT_DESC_MAX]entity_t = [_]entity_t{0} ** FLECS_EVENT_DESC_MAX,
 
     yield_existing: bool = false,
-    callback: iter_action_t,
+    callback: ?iter_action_t,
     run: ?run_action_t = null,
     ctx: ?*anyopaque = null,
     ctx_free: ?ctx_free_t = null,

@@ -662,6 +662,7 @@ pub fn build(b: *std.Build) void {
 
     if (target.result.os.tag == .windows) {
         lib.linkSystemLibrary("ws2_32");
+        lib.linkSystemLibrary("dbghelp");
     }
     const test_step = b.step("test", "Run zflecs tests");
 
