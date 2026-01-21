@@ -1334,8 +1334,6 @@ pub fn init() *world_t {
         os.ecs_os_api.abort_ = flecs_abort;
     }
 
-    assert(num_worlds == 0);
-
     if (num_worlds == 0) {
         EcsAllocator.gpa = .{};
         EcsAllocator.allocator = EcsAllocator.gpa.?.allocator();
@@ -1344,108 +1342,125 @@ pub fn init() *world_t {
         os.ecs_os_api.free_ = &EcsAllocator.free;
         os.ecs_os_api.realloc_ = &EcsAllocator.realloc;
         os.ecs_os_api.calloc_ = &EcsAllocator.calloc;
+
+        world_component_lookup = std.AutoHashMap(*const world_t, std.AutoHashMap(usize, id_t)).init(EcsAllocator.allocator.?);
+        first_world_pointers = std.AutoHashMap(*id_t, u0).init(EcsAllocator.allocator.?);
+    }
+
+    const world = ecs_init();
+
+    if (num_worlds == 0) {
+        first_world = world;
+
+        Query = EcsQuery;
+        Observer = EcsObserver;
+        System = EcsSystem;
+        Flecs = EcsFlecs;
+        FlecsCore = EcsFlecsCore;
+        World = EcsWorld;
+        Wildcard = EcsWildcard;
+        Any = EcsAny;
+        This = EcsThis;
+        Variable = EcsVariable;
+        Transitive = EcsTransitive;
+        Reflexive = EcsReflexive;
+        Final = EcsFinal;
+        Inheritable = EcsInheritable;
+        OnInstantiate = EcsOnInstantiate;
+        Override = EcsOverride;
+        Inherit = EcsInherit;
+        DontInherit = EcsDontInherit;
+        Symmetric = EcsSymmetric;
+        Exclusive = EcsExclusive;
+        Acyclic = EcsAcyclic;
+        Traversable = EcsTraversable;
+        With = EcsWith;
+        OneOf = EcsOneOf;
+        CanToggle = EcsCanToggle;
+        Trait = EcsTrait;
+        Relationship = EcsRelationship;
+        Target = EcsTarget;
+        PairIsTag = EcsPairIsTag;
+        Name = EcsName;
+        Symbol = EcsSymbol;
+        Alias = EcsAlias;
+        ChildOf = EcsChildOf;
+        IsA = EcsIsA;
+        DependsOn = EcsDependsOn;
+        SlotOf = EcsSlotOf;
+        OrderedChildren = EcsOrderedChildren;
+        Module = EcsModule;
+        Private = EcsPrivate;
+        Prefab = EcsPrefab;
+        Disabled = EcsDisabled;
+        NotQueryable = EcsNotQueryable;
+        OnAdd = EcsOnAdd;
+        OnRemove = EcsOnRemove;
+        OnSet = EcsOnSet;
+        Monitor = EcsMonitor;
+        OnTableCreate = EcsOnTableCreate;
+        OnTableDelete = EcsOnTableDelete;
+        OnDelete = EcsOnDelete;
+        OnDeleteTarget = EcsOnDeleteTarget;
+        Remove = EcsRemove;
+        Delete = EcsDelete;
+        Panic = EcsPanic;
+        Singleton = EcsSingleton;
+        Sparse = EcsSparse;
+        DontFragment = EcsDontFragment;
+        PredEq = EcsPredEq;
+        PredMatch = EcsPredMatch;
+        PredLookup = EcsPredLookup;
+        ScopeOpen = EcsScopeOpen;
+        ScopeClose = EcsScopeClose;
+        Empty = EcsEmpty;
+        OnStart = EcsOnStart;
+        PreFrame = EcsPreFrame;
+        OnLoad = EcsOnLoad;
+        PostLoad = EcsPostLoad;
+        PreUpdate = EcsPreUpdate;
+        OnUpdate = EcsOnUpdate;
+        OnValidate = EcsOnValidate;
+        PostUpdate = EcsPostUpdate;
+        PreStore = EcsPreStore;
+        OnStore = EcsOnStore;
+        PostFrame = EcsPostFrame;
+        Phase = EcsPhase;
+        Constant = EcsConstant;
+
+        // TODO DefaultChildComponent = EcsDefaultChildComponent;
     }
 
     num_worlds += 1;
-    component_ids_hm.ensureTotalCapacity(32) catch @panic("OOM");
-    const world = ecs_init();
-
-    Query = EcsQuery;
-    Observer = EcsObserver;
-    System = EcsSystem;
-    Flecs = EcsFlecs;
-    FlecsCore = EcsFlecsCore;
-    World = EcsWorld;
-    Wildcard = EcsWildcard;
-    Any = EcsAny;
-    This = EcsThis;
-    Variable = EcsVariable;
-    Transitive = EcsTransitive;
-    Reflexive = EcsReflexive;
-    Final = EcsFinal;
-    Inheritable = EcsInheritable;
-    OnInstantiate = EcsOnInstantiate;
-    Override = EcsOverride;
-    Inherit = EcsInherit;
-    DontInherit = EcsDontInherit;
-    Symmetric = EcsSymmetric;
-    Exclusive = EcsExclusive;
-    Acyclic = EcsAcyclic;
-    Traversable = EcsTraversable;
-    With = EcsWith;
-    OneOf = EcsOneOf;
-    CanToggle = EcsCanToggle;
-    Trait = EcsTrait;
-    Relationship = EcsRelationship;
-    Target = EcsTarget;
-    PairIsTag = EcsPairIsTag;
-    Name = EcsName;
-    Symbol = EcsSymbol;
-    Alias = EcsAlias;
-    ChildOf = EcsChildOf;
-    IsA = EcsIsA;
-    DependsOn = EcsDependsOn;
-    SlotOf = EcsSlotOf;
-    OrderedChildren = EcsOrderedChildren;
-    Module = EcsModule;
-    Private = EcsPrivate;
-    Prefab = EcsPrefab;
-    Disabled = EcsDisabled;
-    NotQueryable = EcsNotQueryable;
-    OnAdd = EcsOnAdd;
-    OnRemove = EcsOnRemove;
-    OnSet = EcsOnSet;
-    Monitor = EcsMonitor;
-    OnTableCreate = EcsOnTableCreate;
-    OnTableDelete = EcsOnTableDelete;
-    OnDelete = EcsOnDelete;
-    OnDeleteTarget = EcsOnDeleteTarget;
-    Remove = EcsRemove;
-    Delete = EcsDelete;
-    Panic = EcsPanic;
-    Singleton = EcsSingleton;
-    Sparse = EcsSparse;
-    DontFragment = EcsDontFragment;
-    PredEq = EcsPredEq;
-    PredMatch = EcsPredMatch;
-    PredLookup = EcsPredLookup;
-    ScopeOpen = EcsScopeOpen;
-    ScopeClose = EcsScopeClose;
-    Empty = EcsEmpty;
-    OnStart = EcsOnStart;
-    PreFrame = EcsPreFrame;
-    OnLoad = EcsOnLoad;
-    PostLoad = EcsPostLoad;
-    PreUpdate = EcsPreUpdate;
-    OnUpdate = EcsOnUpdate;
-    OnValidate = EcsOnValidate;
-    PostUpdate = EcsPostUpdate;
-    PreStore = EcsPreStore;
-    OnStore = EcsOnStore;
-    PostFrame = EcsPostFrame;
-    Phase = EcsPhase;
-    Constant = EcsConstant;
-
-    // TODO DefaultChildComponent = EcsDefaultChildComponent;
+    world_component_lookup.put(world, std.AutoHashMap(usize, id_t).init(EcsAllocator.allocator.?)) catch @panic("OOM");
 
     return world;
 }
 extern fn ecs_init() *world_t;
 
 pub fn fini(world: *world_t) i32 {
-    assert(num_worlds == 1);
+    assert(num_worlds > 0);
     num_worlds -= 1;
 
     const fini_result = ecs_fini(world);
 
-    var it = component_ids_hm.iterator();
-    while (it.next()) |kv| {
-        const ptr = kv.key_ptr.*;
-        ptr.* = 0;
+    if (world == first_world) {
+        // Clear the stored ID's for the first world, so if another gets created later they don't get stale IDs
+        var it = first_world_pointers.iterator();
+        while (it.next()) |kv| {
+            const ptr = kv.key_ptr.*;
+            ptr.* = 0;
+        }
+        first_world_pointers.deinit();
     }
-    component_ids_hm.clearRetainingCapacity();
+
+    var component_type_lookup = world_component_lookup.getPtr(world);
+    if (component_type_lookup != null) {
+        component_type_lookup.?.deinit();
+    }
 
     if (num_worlds == 0) {
+        world_component_lookup.deinit();
         _ = EcsAllocator.gpa.?.deinit();
         EcsAllocator.gpa = null;
         EcsAllocator.allocator = null;
@@ -2232,7 +2247,7 @@ extern fn ecs_id_from_str(world: *const world_t, expr: [*:0]const u8) id_t;
 //--------------------------------------------------------------------------------------------------
 
 pub fn each(world: *const world_t, comptime T: type) iter_t {
-    return each_id(world, id(T));
+    return each_id(world, world_id(world, T));
 }
 
 /// `pub fn ecs_each_id(world: *const world_t, component: id_t) iter_t`
@@ -2849,23 +2864,25 @@ extern fn ecs_using_task_threads(world: *world_t) bool;
 // Declarative functions (ECS_* macros in flecs)
 //
 //--------------------------------------------------------------------------------------------------
-// TODO: We support only one `world_t` at the time because type ids are stored in a global static memory.
-// We need to reset those ids to zero when the world is destroyed
-// (we do this in `pub fn fini(world: *world_t) i32`).
+
 var num_worlds: u32 = 0;
-var component_ids_hm = std.AutoHashMap(*id_t, u0).init(std.heap.page_allocator);
+var first_world: *world_t = undefined;
+var first_world_pointers: std.AutoHashMap(*id_t, u0) = undefined;
+
+var world_component_lookup: std.AutoHashMap(*const world_t, std.AutoHashMap(usize, id_t)) = undefined;
 
 pub fn COMPONENT(world: *world_t, comptime T: type) void {
     if (@sizeOf(T) == 0)
         @compileError("Size of the type must be greater than zero");
 
-    const type_id_ptr = perTypeGlobalVarPtr(T);
-    if (type_id_ptr.* != 0)
+    if (num_worlds == 0)
         return;
 
-    component_ids_hm.put(type_id_ptr, 0) catch @panic("OOM");
+    var component_type_lookup = world_component_lookup.getPtr(world);
+    if (component_type_lookup == null)
+        return;
 
-    type_id_ptr.* = ecs_component_init(world, &.{
+    const component_id = ecs_component_init(world, &.{
         .entity = ecs_entity_init(world, &.{
             .use_low_id = true,
             .name = typeName(T),
@@ -2886,19 +2903,37 @@ pub fn COMPONENT(world: *world_t, comptime T: type) void {
             },
         },
     });
+
+    component_type_lookup.?.put(perTypeAddress(T), component_id) catch @panic("OOM");
+
+    if (world == first_world) {
+        const type_id_ptr = perTypeFirstVarPtr(T);
+        type_id_ptr.* = component_id;
+        first_world_pointers.put(type_id_ptr, 0) catch @panic("OOM");
+    }
 }
 
 pub fn TAG(world: *world_t, comptime T: type) void {
     if (@sizeOf(T) != 0)
         @compileError("Size of the type must be zero");
 
-    const type_id_ptr = perTypeGlobalVarPtr(T);
-    if (type_id_ptr.* != 0)
+    if (num_worlds == 0)
         return;
 
-    component_ids_hm.put(type_id_ptr, 0) catch @panic("OOM");
+    var component_type_lookup = world_component_lookup.getPtr(world);
+    if (component_type_lookup == null) {
+        return;
+    }
 
-    type_id_ptr.* = ecs_entity_init(world, &.{ .name = typeName(T) });
+    const type_id = ecs_entity_init(world, &.{ .name = typeName(T) });
+
+    component_type_lookup.?.put(perTypeAddress(T), type_id) catch @panic("OOM");
+
+    if (world == first_world) {
+        const type_id_ptr = perTypeFirstVarPtr(T);
+        type_id_ptr.* = type_id;
+        first_world_pointers.put(type_id_ptr, 0) catch @panic("OOM");
+    }
 }
 
 pub fn SYSTEM(
@@ -3113,37 +3148,37 @@ pub fn typeName(comptime T: type) @TypeOf(@typeName(T)) {
 //
 //--------------------------------------------------------------------------------------------------
 pub fn set(world: *world_t, entity: entity_t, comptime T: type, val: T) entity_t {
-    return ecs_set_id(world, entity, id(T), @sizeOf(T), @as(*const anyopaque, @ptrCast(&val)));
+    return ecs_set_id(world, entity, world_id(world, T), @sizeOf(T), @as(*const anyopaque, @ptrCast(&val)));
 }
 
 pub fn get(world: *const world_t, entity: entity_t, comptime T: type) ?*const T {
-    if (get_id(world, entity, id(T))) |ptr| {
+    if (get_id(world, entity, world_id(world, T))) |ptr| {
         return cast(T, ptr);
     }
     return null;
 }
 
 pub fn get_mut(world: *world_t, entity: entity_t, comptime T: type) ?*T {
-    if (get_mut_id(world, entity, id(T))) |ptr| {
+    if (get_mut_id(world, entity, world_id(world, T))) |ptr| {
         return cast_mut(T, ptr);
     }
     return null;
 }
 
 pub fn add(world: *world_t, entity: entity_t, comptime T: type) void {
-    ecs_add_id(world, entity, id(T));
+    ecs_add_id(world, entity, world_id(world, T));
 }
 
 pub fn remove(world: *world_t, entity: entity_t, comptime T: type) void {
-    ecs_remove_id(world, entity, id(T));
+    ecs_remove_id(world, entity, world_id(world, T));
 }
 
 pub fn override(world: *world_t, entity: entity_t, comptime T: type) void {
-    ecs_auto_override_id(world, entity, id(T));
+    ecs_auto_override_id(world, entity, world_id(world, T));
 }
 
 pub fn modified(world: *world_t, entity: entity_t, comptime T: type) void {
-    ecs_modified_id(world, entity, id(T));
+    ecs_modified_id(world, entity, world_id(world, T));
 }
 
 pub fn field(it: *iter_t, comptime T: type, index: i8) ?[]T {
@@ -3154,8 +3189,25 @@ pub fn field(it: *iter_t, comptime T: type, index: i8) ?[]T {
     return null;
 }
 
+// This function provides the fastest look up time for a types ID possible, but only works on the first world created
+// If you have an application with multiple worlds you should use `pub fn world_id`
 pub inline fn id(comptime T: type) id_t {
-    return perTypeGlobalVarPtr(T).*;
+    return perTypeFirstVarPtr(T).*;
+}
+
+pub fn world_id(world: *const world_t, comptime T: type) id_t {
+    if (num_worlds == 0)
+        return 0;
+
+    const component_type_lookup = world_component_lookup.getPtr(world);
+    if (component_type_lookup == null)
+        return 0;
+
+    const type_id = component_type_lookup.?.get(perTypeAddress(T));
+    if (type_id == null)
+        return 0;
+
+    return type_id.?;
 }
 
 pub const pair = make_pair;
@@ -3169,35 +3221,35 @@ pub fn cast_mut(comptime T: type, val: ?*anyopaque) *T {
 }
 
 pub fn singleton_set(world: *world_t, comptime T: type, val: T) entity_t {
-    return set(world, id(T), T, val);
+    return set(world, world_id(world, T), T, val);
 }
 
 pub fn singleton_get(world: *world_t, comptime T: type) ?*const T {
-    return get(world, id(T), T);
+    return get(world, world_id(world, T), T);
 }
 
 pub fn singleton_get_mut(world: *world_t, comptime T: type) ?*T {
-    return get_mut(world, id(T), T);
+    return get_mut(world, world_id(world, T), T);
 }
 
 pub fn singleton_ensure(world: *world_t, comptime T: type) *T {
-    return ensure(world, id(T), T);
+    return ensure(world, world_id(world, T), T);
 }
 
 pub fn singleton_emplace(world: *world_t, comptime T: type, is_new: ?*bool) *T {
-    return emplace(world, id(T), T, is_new);
+    return emplace(world, world_id(world, T), T, is_new);
 }
 
 pub fn singleton_add(world: *world_t, comptime T: type) void {
-    add(world, id(T), T);
+    add(world, world_id(world, T), T);
 }
 
 pub fn singleton_remove(world: *world_t, comptime T: type) void {
-    remove(world, id(T), T);
+    remove(world, world_id(world, T), T);
 }
 
 pub fn singleton_modified(world: *world_t, comptime T: type) void {
-    modified(world, id(T), T);
+    modified(world, world_id(world, T), T);
 }
 
 // Entity Names
@@ -3233,8 +3285,13 @@ fn PerTypeGlobalVar(comptime in_type: type) type {
     }
 
     return struct {
-        var id: id_t = 0;
+        var first_world_id: id_t = 0;
 
+        // We use the pointer of the first character of our types name as a unique ID for type lookups
+        var address_char: u8 = @typeName(in_type)[0];
+        inline fn address() usize {
+            return @intFromPtr(&address_char);
+        }
         // Ensure that a unique struct type is generated for each unique `in_type`. See
         // https://github.com/ziglang/zig/issues/18816
         comptime {
@@ -3244,9 +3301,15 @@ fn PerTypeGlobalVar(comptime in_type: type) type {
         }
     };
 }
-inline fn perTypeGlobalVarPtr(comptime T: type) *id_t {
-    return comptime &PerTypeGlobalVar(T).id;
+
+inline fn perTypeFirstVarPtr(comptime T: type) *id_t {
+    return comptime &PerTypeGlobalVar(T).first_world_id;
 }
+
+inline fn perTypeAddress(comptime T: type) usize {
+    return PerTypeGlobalVar(T).address();
+}
+
 //--------------------------------------------------------------------------------------------------
 //
 // OS API
@@ -3597,7 +3660,7 @@ extern fn ecs_script_vars_declare(vars: *script_vars_t, name: [*:0]const u8) ?*s
 pub const script_vars_define_id = ecs_script_vars_define_id;
 extern fn ecs_script_vars_define_id(vars: *script_vars_t, name: [*:0]const u8, @"type": entity_t) ?*script_var_t;
 pub fn script_vars_define(vars: *script_vars_t, name: [*:0]const u8, T: type) ?*script_var_t {
-    return script_vars_define_id(vars, name, id(T));
+    return script_vars_define_id(vars, name, id(vars.world, T));
 }
 
 //--------------------------------------------------------------------------------------------------
