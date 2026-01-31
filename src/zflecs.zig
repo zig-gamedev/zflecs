@@ -7,6 +7,7 @@ pub const flecs_version = std.SemanticVersion{
     .major = 4,
     .minor = 1,
     .patch = 4,
+    .pre = 42, // TODO: CHANGE VERSION BEFORE PR.
 };
 
 const flecs_is_sanitize = build_options.debug_mode == .sanitize or
@@ -166,14 +167,14 @@ pub const EcsTermReflexive = 1 << 3;
 pub const EcsTermIdInherited = 1 << 4;
 pub const EcsTermIsTrivial = 1 << 5;
 // 6 missing in flecs
-pub const EcsTermIsCacheable = 1 << 7;
-pub const EcsTermIsScope = 1 << 8;
-pub const EcsTermIsMember = 1 << 9;
-pub const EcsTermIsToggle = 1 << 10;
-pub const EcsTermKeepAlive = 1 << 11;
-pub const EcsTermIsSparse = 1 << 12;
-pub const EcsTermIsOr = 1 << 13;
-pub const EcsTermDontFragment = 1 << 14;
+pub const EcsTermIsCacheable = 1 << 6;
+pub const EcsTermIsScope = 1 << 7;
+pub const EcsTermIsMember = 1 << 8;
+pub const EcsTermIsToggle = 1 << 9;
+pub const EcsTermIsSparse = 1 << 10;
+pub const EcsTermIsOr = 1 << 11;
+pub const EcsTermDontFragment = 1 << 12;
+pub const EcsTermNonFragmentingChildOf = 1 << 13;
 
 // Observer flags
 
@@ -190,11 +191,12 @@ pub const EcsObserverKeepAlive = 1 << 11;
 
 // Table flags (used by ecs_table_t::flags)
 
-pub const EcsTableHasBuiltins = 1 << 1;
-pub const EcsTableIsPrefab = 1 << 2;
-pub const EcsTableHasIsA = 1 << 3;
-pub const EcsTableHasMultiIsA = 1 << 4;
-pub const EcsTableHasChildOf = 1 << 5;
+pub const EcsTableHasBuiltins = 1 << 0;
+pub const EcsTableIsPrefab = 1 << 1;
+pub const EcsTableHasIsA = 1 << 2;
+pub const EcsTableHasMultiIsA = 1 << 3;
+pub const EcsTableHasChildOf = 1 << 4;
+pub const EcsTableHasParent = 1 << 5;
 pub const EcsTableHasName = 1 << 6;
 pub const EcsTableHasPairs = 1 << 7;
 pub const EcsTableHasModule = 1 << 8;
@@ -238,6 +240,7 @@ pub const EcsAperiodicComponentMonitors = 1 << 2;
 pub const EcsAperiodicEmptyQueries = 1 << 4;
 
 // Extern declarations
+extern const EcsParentDepth: entity_t;
 extern const EcsQuery: entity_t;
 extern const EcsObserver: entity_t;
 extern const EcsSystem: entity_t;
@@ -276,7 +279,6 @@ extern const EcsDependsOn: entity_t;
 extern const EcsSlotOf: entity_t;
 extern const EcsOrderedChildren: entity_t;
 extern const EcsModule: entity_t;
-extern const EcsPrivate: entity_t;
 extern const EcsPrefab: entity_t;
 extern const EcsDisabled: entity_t;
 extern const EcsNotQueryable: entity_t;
@@ -320,6 +322,11 @@ pub const EcsDefaultChildComponent = extern struct {
     component: id_t,
 };
 
+pub extern const FLECS_IDEcsParentID_: entity_t;
+pub const EcsParent = extern struct {
+    value: entity_t,
+};
+
 pub var Query: entity_t = undefined;
 pub var Observer: entity_t = undefined;
 pub var System: entity_t = undefined;
@@ -358,7 +365,6 @@ pub var DependsOn: entity_t = undefined;
 pub var SlotOf: entity_t = undefined;
 pub var OrderedChildren: entity_t = undefined;
 pub var Module: entity_t = undefined;
-pub var Private: entity_t = undefined;
 pub var Prefab: entity_t = undefined;
 pub var Disabled: entity_t = undefined;
 pub var NotQueryable: entity_t = undefined;
@@ -1139,6 +1145,7 @@ pub const observer_desc_t = extern struct {
     events: [FLECS_EVENT_DESC_MAX]entity_t = [_]entity_t{0} ** FLECS_EVENT_DESC_MAX,
 
     yield_existing: bool = false,
+    global_observer: bool = false,
     callback: ?iter_action_t,
     run: ?run_action_t = null,
     ctx: ?*anyopaque = null,
@@ -1388,7 +1395,6 @@ pub fn init() *world_t {
     SlotOf = EcsSlotOf;
     OrderedChildren = EcsOrderedChildren;
     Module = EcsModule;
-    Private = EcsPrivate;
     Prefab = EcsPrefab;
     Disabled = EcsDisabled;
     NotQueryable = EcsNotQueryable;
@@ -3415,7 +3421,7 @@ extern fn ecs_import_c(world: *world_t, module: module_action_t, module_name_c: 
 
 /// `pub fn module_init(world: *world_t, c_name: [*:0]const u8, desc: *component_desc_t) entity_t`
 pub const module_init = ecs_module_init;
-extern fn ecs_module_init(world: *world_t, c_name: [*:0]const u8, desc: *component_desc_t) entity_t;
+extern fn ecs_module_init(world: *world_t, c_name: [*:0]const u8, desc: *const component_desc_t) entity_t;
 
 //--------------------------------------------------------------------------------------------------
 //
@@ -3485,10 +3491,11 @@ pub const member_t = extern struct {
 pub const struct_desc_t = extern struct {
     entity: entity_t,
     members: [ECS_MEMBER_DESC_CACHE_SIZE]member_t,
+    create_member_entities: bool,
 };
 
 pub const struct_init = ecs_struct_init;
-extern fn ecs_struct_init(world: *world_t, desc: struct_desc_t) entity_t;
+extern fn ecs_struct_init(world: *world_t, desc: *const struct_desc_t) entity_t;
 
 //--------------------------------------------------------------------------------------------------
 //
