@@ -485,7 +485,7 @@ test "zflecs.struct-dtor-hook" {
 
     ecs.COMPONENT(world, Chat);
     {
-        var system_desc = ecs.system_desc_t{};
+        var system_desc = ecs.system_desc_t{ .phase = ecs.OnUpdate };
         system_desc.callback = struct {
             pub fn chatSystem(it: *ecs.iter_t) callconv(.c) void {
                 const chat_components = ecs.field(it, Chat, 0).?;
@@ -495,7 +495,7 @@ test "zflecs.struct-dtor-hook" {
             }
         }.chatSystem;
         system_desc.query.terms[0] = .{ .id = ecs.id(Chat) };
-        _ = ecs.SYSTEM(world, "Chat system", ecs.OnUpdate, &system_desc);
+        _ = ecs.SYSTEM(world, "Chat system", &system_desc);
     }
 
     const chat_entity = ecs.new_entity(world, "Chat entity");
