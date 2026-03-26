@@ -13,7 +13,7 @@ const Walking = struct {};
 const Direction = enum { north, south, east, west };
 
 test {
-    std.testing.refAllDeclsRecursive(@This());
+    std.testing.refAllDecls(@This());
 }
 
 test "extern struct ABI compatibility" {
