@@ -18,12 +18,7 @@ test {
 
 test "extern struct ABI compatibility" {
     @setEvalBranchQuota(50_000);
-    const flecs_c = @cImport({
-        @cDefine("FLECS_SANITIZE", if (builtin.mode == .Debug) "1" else {});
-        @cDefine("FLECS_USE_OS_ALLOC", "1");
-        @cDefine("FLECS_NO_CPP", "1");
-        @cInclude("flecs.h");
-    });
+    const flecs_c = @import("flecs_c");
     inline for (comptime std.meta.declarations(@This())) |decl| {
         const ZigType = @field(@This(), decl.name);
         if (@TypeOf(ZigType) != type) {
@@ -473,11 +468,12 @@ test "zflecs.pairs.delete-children" {
 }
 
 test "zflecs.struct-dtor-hook" {
+    const a = std.testing.allocator;
     const world = ecs.init();
     defer _ = ecs.fini(world);
 
     const Chat = struct {
-        messages: std.ArrayList([]const u8) = .{},
+        messages: std.ArrayList([]const u8),
         pub fn dtor(self: *@This()) void {
             self.messages.deinit(std.testing.allocator);
         }
@@ -498,8 +494,9 @@ test "zflecs.struct-dtor-hook" {
         _ = ecs.SYSTEM(world, "Chat system", ecs.OnUpdate, &system_desc);
     }
 
+    const chat = Chat{ .messages = try .initCapacity(a, 200) };
     const chat_entity = ecs.new_entity(world, "Chat entity");
-    _ = ecs.set(world, chat_entity, Chat, Chat{});
+    _ = ecs.set(world, chat_entity, Chat, chat);
 
     _ = ecs.progress(world, 0);
 

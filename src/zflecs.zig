@@ -31,7 +31,7 @@ pub const flags32_t = u32;
 pub const flags64_t = u64;
 
 pub fn flagsn_t(comptime bits: u16) type {
-    return std.meta.Int(.unsigned, bits);
+    return @Int(.unsigned, bits);
 }
 pub const termset_t = flagsn_t(FLECS_TERM_COUNT_MAX);
 
@@ -686,7 +686,7 @@ pub const query_t = extern struct {
 };
 
 pub fn array(comptime T: type, comptime len: comptime_int) [len]T {
-    return [_]T{.{}} ** len;
+    return @splat(.{});
 }
 
 pub const observer_t = extern struct {
@@ -1105,7 +1105,7 @@ pub const iter_t = extern struct {
 pub const query_desc_t = extern struct {
     _canary: i32 = 0,
 
-    terms: [FLECS_TERM_COUNT_MAX]term_t = [_]term_t{.{}} ** FLECS_TERM_COUNT_MAX,
+    terms: [FLECS_TERM_COUNT_MAX]term_t = @splat(.{}),
     expr: ?[*:0]const u8 = null,
 
     cache_kind: query_cache_kind_t = .QueryCacheDefault,
@@ -1136,7 +1136,7 @@ pub const observer_desc_t = extern struct {
 
     query: query_desc_t = .{},
 
-    events: [FLECS_EVENT_DESC_MAX]entity_t = [_]entity_t{0} ** FLECS_EVENT_DESC_MAX,
+    events: [FLECS_EVENT_DESC_MAX]entity_t = @splat(0),
 
     yield_existing: bool = false,
     callback: ?iter_action_t,
@@ -1242,7 +1242,7 @@ const EcsAllocator = struct {
 
     const Alignment = 16;
 
-    var gpa: ?std.heap.GeneralPurposeAllocator(.{}) = null;
+    var gpa: ?std.heap.DebugAllocator(.{}) = null;
     var allocator: ?std.mem.Allocator = null;
 
     fn alloc(size: i32) callconv(.c) ?*anyopaque {
@@ -3055,7 +3055,7 @@ pub fn new_entity(world: *world_t, name: [*:0]const u8) entity_t {
 pub fn new_prefab(world: *world_t, name: [*:0]const u8) entity_t {
     return entity_init(world, &.{
         .name = name,
-        .add = @ptrCast(&[_]id_t{EcsPrefab} ++ [_]id_t{0} ** (FLECS_ID_DESC_MAX - 1)),
+        .add = @ptrCast(&[_]id_t{EcsPrefab} ++ @as([FLECS_ID_DESC_MAX - 1]id_t, @splat(0))),
     });
 }
 

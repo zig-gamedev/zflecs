@@ -666,11 +666,23 @@ pub fn build(b: *std.Build) void {
     }
     const test_step = b.step("test", "Run zflecs tests");
 
+    const translate_c = b.addTranslateC(.{
+        .root_source_file = b.path("libs/flecs/flecs.h"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
+    translate_c.defineCMacro("FLECS_SANITIZE", if (builtin.mode == .Debug) "1" else {});
+    translate_c.defineCMacro("FLECS_USE_OS_ALLOC", "1");
+    translate_c.defineCMacro("FLECS_NO_CPP", "1");
     const tests_module = b.createModule(.{
         .root_source_file = b.path("src/tests.zig"),
         .target = target,
         .optimize = optimize,
         .link_libc = true,
+        .imports = &.{
+            .{ .name = "flecs_c", .module = translate_c.createModule() },
+        },
     });
     tests_module.addOptions("build-options", options);
     tests_module.addIncludePath(b.path("libs/flecs"));
