@@ -564,6 +564,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/zflecs.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
 
     module.addOptions("build-options", options);
@@ -657,12 +658,11 @@ pub fn build(b: *std.Build) void {
         .linkage = if (opt_use_shared) .dynamic else .static,
         .root_module = module,
     });
-    lib.linkLibC();
     b.installArtifact(lib);
 
     if (target.result.os.tag == .windows) {
-        lib.linkSystemLibrary("ws2_32");
-        lib.linkSystemLibrary("dbghelp");
+        lib.root_module.linkSystemLibrary("ws2_32", .{});
+        lib.root_module.linkSystemLibrary("dbghelp", .{});
     }
     const test_step = b.step("test", "Run zflecs tests");
 
@@ -670,16 +670,16 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/tests.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     tests_module.addOptions("build-options", options);
+    tests_module.addIncludePath(b.path("libs/flecs"));
+    tests_module.linkLibrary(lib);
 
     const tests = b.addTest(.{
         .name = "zflecs-tests",
         .root_module = tests_module,
     });
-    tests.addIncludePath(b.path("libs/flecs"));
-    tests.linkLibrary(lib);
-    tests.linkLibC();
     b.installArtifact(tests);
 
     test_step.dependOn(&b.addRunArtifact(tests).step);

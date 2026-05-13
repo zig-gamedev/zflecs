@@ -1326,9 +1326,18 @@ const EcsAllocator = struct {
 };
 
 fn flecs_abort() callconv(.c) noreturn {
-    std.debug.dumpCurrentStackTrace(@returnAddress());
+    if (builtin.zig_version.major == 0 and builtin.zig_version.minor <= 15) {
+        std.debug.dumpCurrentStackTrace(@returnAddress());
+    } else {
+        std.debug.dumpCurrentStackTrace(.{
+            .first_address = @returnAddress(),
+            // TODO: Not sure about that
+            // .allow_unsafe_unwind = false,
+            // .context = null,
+        });
+    }
     @breakpoint();
-    std.posix.exit(1);
+    std.process.exit(1);
 }
 
 //--------------------------------------------------------------------------------------------------
