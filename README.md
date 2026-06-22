@@ -1,6 +1,7 @@
 # [zflecs](https://github.com/zig-gamedev/zflecs)
 
 Zig build package and bindings for [flecs](https://github.com/SanderMertens/flecs) ECS v4.1.5
+
 Minimum Zig Version: [0.16.0](https://ziglang.org/download/)
 
 
