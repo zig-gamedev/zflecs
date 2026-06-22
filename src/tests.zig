@@ -477,7 +477,7 @@ test "zflecs.struct-dtor-hook" {
     defer _ = ecs.fini(world);
 
     const Chat = struct {
-        messages: std.ArrayList([]const u8) = .{},
+        messages: std.ArrayList([]const u8) = .empty,
         pub fn dtor(self: *@This()) void {
             self.messages.deinit(std.testing.allocator);
         }

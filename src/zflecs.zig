@@ -1249,7 +1249,7 @@ const EcsAllocator = struct {
 
     const Alignment = 16;
 
-    var gpa: ?std.heap.GeneralPurposeAllocator(.{}) = null;
+    var gpa: ?std.heap.DebugAllocator(.{}) = null;
     var allocator: ?std.mem.Allocator = null;
 
     fn alloc(size: i32) callconv(.c) ?*anyopaque {
