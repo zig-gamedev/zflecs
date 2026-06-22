@@ -2,6 +2,9 @@
 
 Zig build package and bindings for [flecs](https://github.com/SanderMertens/flecs) ECS v4.1.5
 
+Minimum Zig Version: [0.16.0](https://ziglang.org/download/)
+
+
 ## Getting started
 
 Example`build.zig`:
@@ -12,7 +15,7 @@ pub fn build(b: *std.Build) void {
 
     const zflecs = b.dependency("zflecs", .{});
     exe.root_module.addImport("zflecs", zflecs.module("root"));
-    exe.linkLibrary(zflecs.artifact("flecs"));
+    exe.root_module.linkLibrary(zflecs.artifact("flecs"));
 }
 ```
 
@@ -46,7 +49,8 @@ fn move_system_with_it(it: *ecs.iter_t, positions: []Position, velocities: []con
     }
 }
 
-pub fn main() !void {
+pub fn main(init : std.process.Init.Minimal) !void {
+    _ = init;
     const world = ecs.init();
     defer _ = ecs.fini(world);
 
