@@ -683,4 +683,21 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(tests);
 
     test_step.dependOn(&b.addRunArtifact(tests).step);
+
+    const mw_test_module = b.createModule(.{
+        .root_source_file = b.path("src/multi_world_test.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
+    mw_test_module.addIncludePath(b.path("libs/flecs"));
+    mw_test_module.linkLibrary(lib);
+
+    const mw_tests = b.addTest(.{
+        .name = "zflecs-multi-world-tests",
+        .root_module = mw_test_module,
+    });
+    b.installArtifact(mw_tests);
+
+    test_step.dependOn(&b.addRunArtifact(mw_tests).step);
 }
