@@ -2902,7 +2902,7 @@ pub fn TAG(world: *world_t, comptime T: type) void {
         component_ids_hm.put(type_id_ptr, 0) catch @panic("OOM");
     }
 
-    type_id_ptr.* = ecs_entity_init(world, &.{ .name = typeName(T) });
+    type_id_ptr.* = ecs_entity_init(world, &.{ .use_low_id = true, .name = typeName(T) });
 }
 var num_worlds: u32 = 0;
 var component_ids_hm = std.AutoHashMap(*id_t, u0).init(std.heap.page_allocator);
