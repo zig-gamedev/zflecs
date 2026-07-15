@@ -690,6 +690,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .link_libc = true,
     });
+    mw_test_module.addOptions("build-options", options);
     mw_test_module.addIncludePath(b.path("libs/flecs"));
     mw_test_module.linkLibrary(lib);
 

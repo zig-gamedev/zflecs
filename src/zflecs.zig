@@ -2870,7 +2870,7 @@ pub fn COMPONENT(world: *world_t, comptime T: type) void {
         component_ids_hm.put(type_id_ptr, 0) catch @panic("OOM");
     }
 
-    type_id_ptr.* = ecs_component_init(world, &.{
+    const result = ecs_component_init(world, &.{
         .entity = ecs_entity_init(world, &.{
             .use_low_id = true,
             .name = typeName(T),
@@ -2891,6 +2891,23 @@ pub fn COMPONENT(world: *world_t, comptime T: type) void {
             },
         },
     });
+
+    // Guard: low-ID pool exhausted. Flecs silently falls back to regular
+    // entity IDs when the range is full, which breaks deterministic ID
+    // assignment across worlds.
+    if (result >= FLECS_HI_COMPONENT_ID) {
+        @panic("zflecs: low component ID pool exhausted. Reduce component/tag count or increase FLECS_HI_COMPONENT_ID.");
+    }
+
+    // Guard: when multiple worlds are active simultaneously, all of them
+    // must register components in the same order to keep IDs deterministic.
+    // A mismatch here means one world already has a different ID for this
+    // type, which would cause silent failures in queries and systems.
+    if (type_id_ptr.* != 0 and num_worlds > 1) {
+        std.debug.assert(result == type_id_ptr.*);
+    }
+
+    type_id_ptr.* = result;
 }
 
 pub fn TAG(world: *world_t, comptime T: type) void {
@@ -2902,7 +2919,17 @@ pub fn TAG(world: *world_t, comptime T: type) void {
         component_ids_hm.put(type_id_ptr, 0) catch @panic("OOM");
     }
 
-    type_id_ptr.* = ecs_entity_init(world, &.{ .use_low_id = true, .name = typeName(T) });
+
+    const result = ecs_entity_init(world, &.{ .use_low_id = true, .name = typeName(T) });
+    if (result >= FLECS_HI_COMPONENT_ID) {
+        @panic("zflecs: low component ID pool exhausted. Reduce component/tag count or increase FLECS_HI_COMPONENT_ID.");
+    }
+
+    if (type_id_ptr.* != 0 and num_worlds > 1) {
+        std.debug.assert(result == type_id_ptr.*);
+    }
+
+    type_id_ptr.* = result;
 }
 var num_worlds: u32 = 0;
 var component_ids_hm = std.AutoHashMap(*id_t, u0).init(std.heap.page_allocator);
