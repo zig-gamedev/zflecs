@@ -1452,7 +1452,7 @@ pub fn fini(world: *world_t) i32 {
 }
 extern fn ecs_fini(world: *world_t) i32;
 
-pub fn shutdown() void {
+pub fn deinit() void {
     var it = component_ids_hm.iterator();
     while (it.next()) |kv| {
         const ptr = kv.key_ptr.*;
@@ -2859,7 +2859,7 @@ extern fn ecs_using_task_threads(world: *world_t) bool;
 // register the same component, the global is updated to the latest ID.
 // If all worlds register components in the same order, IDs are identical
 // and set/get/etc work correctly for all worlds simultaneously.
-// Call shutdown() after all worlds have been removed.
+// Call deinit() after all worlds have been removed.
 
 pub fn COMPONENT(world: *world_t, comptime T: type) void {
     if (@sizeOf(T) == 0)
