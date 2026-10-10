@@ -18,12 +18,7 @@ test {
 
 test "extern struct ABI compatibility" {
     @setEvalBranchQuota(50_000);
-    const flecs_c = @cImport({
-        @cDefine("FLECS_SANITIZE", if (builtin.mode == .Debug) "1" else {});
-        @cDefine("FLECS_USE_OS_ALLOC", "1");
-        @cDefine("FLECS_NO_CPP", "1");
-        @cInclude("flecs.h");
-    });
+    const flecs_c = @import("cflecs");
     inline for (comptime std.meta.declarations(@This())) |decl| {
         const ZigType = @field(@This(), decl.name);
         if (@TypeOf(ZigType) != type) {

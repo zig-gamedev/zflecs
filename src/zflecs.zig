@@ -31,7 +31,7 @@ pub const flags32_t = u32;
 pub const flags64_t = u64;
 
 pub fn flagsn_t(comptime bits: u16) type {
-    return std.meta.Int(.unsigned, bits);
+    return @Int(.unsigned, bits);
 }
 pub const termset_t = flagsn_t(FLECS_TERM_COUNT_MAX);
 
@@ -692,7 +692,7 @@ pub const query_t = extern struct {
 };
 
 pub fn array(comptime T: type, comptime len: comptime_int) [len]T {
-    return [_]T{.{}} ** len;
+    return @splat(.{});
 }
 
 pub const observer_t = extern struct {
@@ -1111,7 +1111,7 @@ pub const iter_t = extern struct {
 pub const query_desc_t = extern struct {
     _canary: i32 = 0,
 
-    terms: [FLECS_TERM_COUNT_MAX]term_t = [_]term_t{.{}} ** FLECS_TERM_COUNT_MAX,
+    terms: [FLECS_TERM_COUNT_MAX]term_t = @splat(.{}),
     expr: ?[*:0]const u8 = null,
 
     cache_kind: query_cache_kind_t = .QueryCacheDefault,
@@ -1142,7 +1142,7 @@ pub const observer_desc_t = extern struct {
 
     query: query_desc_t = .{},
 
-    events: [FLECS_EVENT_DESC_MAX]entity_t = [_]entity_t{0} ** FLECS_EVENT_DESC_MAX,
+    events: [FLECS_EVENT_DESC_MAX]entity_t = @splat(0),
 
     yield_existing: bool = false,
     global_observer: bool = false,
@@ -2958,7 +2958,7 @@ pub fn OBSERVER(
 // }
 fn SystemImpl(comptime fn_system: anytype) type {
     const fn_type = @typeInfo(@TypeOf(fn_system));
-    if (fn_type.@"fn".params.len == 0) {
+    if (fn_type.@"fn".param_attrs.len == 0) {
         @compileError("System need at least one parameter");
     }
 
@@ -2967,16 +2967,16 @@ fn SystemImpl(comptime fn_system: anytype) type {
             const ArgsTupleType = std.meta.ArgsTuple(@TypeOf(fn_system));
             var args_tuple: ArgsTupleType = undefined;
 
-            const has_it_param = fn_type.@"fn".params[0].type == *iter_t;
+            const has_it_param = fn_type.@"fn".param_types[0].? == *iter_t;
             if (has_it_param) {
                 args_tuple[0] = it;
             }
 
             const start_index = if (has_it_param) 1 else 0;
 
-            inline for (start_index..fn_type.@"fn".params.len) |i| {
-                const p = fn_type.@"fn".params[i];
-                args_tuple[i] = field(it, @typeInfo(p.type.?).pointer.child, i - start_index).?;
+            inline for (start_index..fn_type.@"fn".param_types.len) |i| {
+                const p = fn_type.@"fn".param_types[i];
+                args_tuple[i] = field(it, @typeInfo(p.?).pointer.child, i - start_index).?;
             }
 
             // NOTE: In theory there is no reason not to use .always_inline
@@ -2999,12 +2999,12 @@ pub fn SYSTEM_DESC(comptime fn_system: anytype) system_desc_t {
     system_desc.callback = system_struct.exec;
 
     const fn_type = @typeInfo(@TypeOf(fn_system)).@"fn";
-    const has_it_param = fn_type.params[0].type == *iter_t;
+    const has_it_param = fn_type.param_types[0].? == *iter_t;
     const start_index = if (has_it_param) 1 else 0;
-    inline for (start_index..fn_type.params.len) |i| {
-        const p = fn_type.params[i];
-        const param_type_info = @typeInfo(p.type.?).pointer;
-        const inout = if (param_type_info.is_const) .In else .InOut;
+    inline for (start_index..fn_type.param_types.len) |i| {
+        const p = fn_type.param_types[i];
+        const param_type_info = @typeInfo(p.?).pointer;
+        const inout = if (param_type_info.attrs.@"const") .In else .InOut;
         system_desc.query.terms[i - start_index] = .{ .id = id(param_type_info.child), .inout = inout };
     }
 
@@ -3017,10 +3017,10 @@ pub fn SYSTEM_DESC_WITH_FILTERS(comptime fn_system: anytype, filters: []const te
     const fn_type = @typeInfo(@TypeOf(fn_system)).@"fn";
     var system_desc = SYSTEM_DESC(fn_system);
 
-    const has_it_param = fn_type.params[0].type == *iter_t;
+    const has_it_param = fn_type.param_types[0].? == *iter_t;
     const start_index = if (has_it_param) 1 else 0;
     for (filters, 0..) |t, i| {
-        system_desc.query.terms[i + fn_type.params.len - start_index] = t;
+        system_desc.query.terms[i + fn_type.param_types.len - start_index] = t;
     }
 
     return system_desc;
@@ -3059,7 +3059,7 @@ pub fn new_entity(world: *world_t, name: [*:0]const u8) entity_t {
 pub fn new_prefab(world: *world_t, name: [*:0]const u8) entity_t {
     return entity_init(world, &.{
         .name = name,
-        .add = @ptrCast(&[_]id_t{EcsPrefab} ++ [_]id_t{0} ** (FLECS_ID_DESC_MAX - 1)),
+        .add = @ptrCast(&[_]id_t{EcsPrefab} ++ @as([FLECS_ID_DESC_MAX - 1]id_t, @splat(0))),
     });
 }
 
