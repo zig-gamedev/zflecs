@@ -216,7 +216,7 @@ pub fn build(b: *std.Build) void {
         \\
         \\    When set, this will cause queries with the EcsQueryCacheDefault policy
         \\    to default to EcsQueryCacheNone. This can reduce the memory footprint of
-        \\    applications at the cost of performance. Queries that use features which 
+        \\    applications at the cost of performance. Queries that use features which
         \\    require caching such as group_by and order_by will still use caching.
     ) orelse false;
     options.addOption(bool, "default_to_uncached_queries", opt_default_to_uncached_queries);
@@ -265,7 +265,7 @@ pub fn build(b: *std.Build) void {
     const opt_alerts_addon = b.option(bool, "toggle_alerts_addon",
         \\
         \\    addon for monitor conditions for errors
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.alerts, opt_alerts_addon);
     options.addOption(bool, "alerts_addon", addons.includeAddon(.alerts));
@@ -273,7 +273,7 @@ pub fn build(b: *std.Build) void {
     const opt_app_addon = b.option(bool, "toggle_app_addon",
         \\
         \\    Application addons
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.app, opt_app_addon);
     options.addOption(bool, "app_addon", addons.includeAddon(.app));
@@ -281,7 +281,7 @@ pub fn build(b: *std.Build) void {
     const opt_doc_addon = b.option(bool, "toggle_doc_addon",
         \\
         \\    Document entities & components
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.doc, opt_doc_addon);
     options.addOption(bool, "doc_addon", addons.includeAddon(.doc));
@@ -289,7 +289,7 @@ pub fn build(b: *std.Build) void {
     const opt_json_addon = b.option(bool, "toggle_json_addon",
         \\
         \\    Parsing JSON to/from component values
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.json, opt_json_addon);
     options.addOption(bool, "json_addon", addons.includeAddon(.json));
@@ -297,7 +297,7 @@ pub fn build(b: *std.Build) void {
     const opt_http_addon = b.option(bool, "toggle_http_addon",
         \\
         \\    Tiny HTTP server for connecting to remote UI
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.http, opt_http_addon);
     options.addOption(bool, "http_addon", addons.includeAddon(.http));
@@ -305,7 +305,7 @@ pub fn build(b: *std.Build) void {
     const opt_log_addon = b.option(bool, "toggle_log_addon",
         \\
         \\    When enabled ECS provides more detailed logs
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.log, opt_log_addon);
     options.addOption(bool, "log_addon", addons.includeAddon(.log));
@@ -313,7 +313,7 @@ pub fn build(b: *std.Build) void {
     const opt_meta_addon = b.option(bool, "toggle_meta_addon",
         \\
         \\    Reflection support
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.meta, opt_meta_addon);
     options.addOption(bool, "meta_addon", addons.includeAddon(.meta));
@@ -321,7 +321,7 @@ pub fn build(b: *std.Build) void {
     const opt_metrics_addon = b.option(bool, "toggle_metrics_addon",
         \\
         \\    Expose component data as statistics
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.metrics, opt_metrics_addon);
     options.addOption(bool, "metrics_addon", addons.includeAddon(.metrics));
@@ -329,7 +329,7 @@ pub fn build(b: *std.Build) void {
     const opt_module_addon = b.option(bool, "toggle_module_addon",
         \\
         \\    Module support
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.module, opt_module_addon);
     options.addOption(bool, "module_addon", addons.includeAddon(.module));
@@ -337,7 +337,7 @@ pub fn build(b: *std.Build) void {
     const opt_os_api_impl = b.option(bool, "toggle_os_api_impl_addon",
         \\
         \\    Default implementation for OS API
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.os_api_impl, opt_os_api_impl);
     options.addOption(bool, "os_api_impl_addon", addons.includeAddon(.os_api_impl));
@@ -345,7 +345,7 @@ pub fn build(b: *std.Build) void {
     const opt_pipeline_addon = b.option(bool, "toggle_pipeline_addon",
         \\
         \\    Pipeline support
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.pipeline, opt_pipeline_addon);
     options.addOption(bool, "pipeline_addon", addons.includeAddon(.pipeline));
@@ -353,7 +353,7 @@ pub fn build(b: *std.Build) void {
     const opt_rest_addon = b.option(bool, "toggle_rest_addon",
         \\
         \\    REST API for querying application data
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.rest, opt_rest_addon);
     options.addOption(bool, "rest_addon", addons.includeAddon(.rest));
@@ -361,7 +361,7 @@ pub fn build(b: *std.Build) void {
     const opt_parser_addon = b.option(bool, "toggle_parser_addon",
         \\
         \\    Utilities for script and query DSL parsers
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.parser, opt_parser_addon);
     options.addOption(bool, "parser_addon", addons.includeAddon(.parser));
@@ -369,7 +369,7 @@ pub fn build(b: *std.Build) void {
     const opt_query_dsl_addon = b.option(bool, "toggle_query_dsl_addon",
         \\
         \\    Flecs query DSL parser
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.query_dsl, opt_query_dsl_addon);
     options.addOption(bool, "query_dsl_addon", addons.includeAddon(.query_dsl));
@@ -377,7 +377,7 @@ pub fn build(b: *std.Build) void {
     const opt_script_addon = b.option(bool, "toggle_script_addon",
         \\
         \\    Flecs entity notation language
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.script, opt_script_addon);
     options.addOption(bool, "script_addon", addons.includeAddon(.script));
@@ -385,7 +385,7 @@ pub fn build(b: *std.Build) void {
     const opt_system_addon = b.option(bool, "toggle_system_addon",
         \\
         \\    System support
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.system, opt_system_addon);
     options.addOption(bool, "system_addon", addons.includeAddon(.system));
@@ -393,7 +393,7 @@ pub fn build(b: *std.Build) void {
     const opt_stats_addon = b.option(bool, "toggle_stats_addon",
         \\
         \\    Track runtime statistics
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.stats, opt_stats_addon);
     options.addOption(bool, "stats_addon", addons.includeAddon(.stats));
@@ -401,7 +401,7 @@ pub fn build(b: *std.Build) void {
     const opt_timer_addon = b.option(bool, "toggle_timer_addon",
         \\
         \\    Timer support
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.timer, opt_timer_addon);
     options.addOption(bool, "timer_addon", addons.includeAddon(.timer));
@@ -409,7 +409,7 @@ pub fn build(b: *std.Build) void {
     const opt_units_addon = b.option(bool, "toggle_units_addon",
         \\
         \\    Builtin standard units
-        \\    (Enables addon on whitelist mode, disables it on blacklist mode) 
+        \\    (Enables addon on whitelist mode, disables it on blacklist mode)
     ) orelse false;
     addons.toggleAddon(.units, opt_units_addon);
     options.addOption(bool, "units_addon", addons.includeAddon(.units));
@@ -417,7 +417,7 @@ pub fn build(b: *std.Build) void {
     const opt_low_footprint = b.option(bool, "low_footprint",
         \\
         \\    Set a number of constants to values that decrease memory footprint, at the
-        \\    cost of decreased performance. 
+        \\    cost of decreased performance.
     ) orelse false;
 
     var hi_component_id_value: ?usize = null;
@@ -589,7 +589,7 @@ pub fn build(b: *std.Build) void {
                 .debug => "-DFLECS_DEBUG",
                 .sanitize => "-DFLECS_SANITIZE",
                 .none => "",
-                .depends_on_build => if (builtin.mode == .Debug) "-DFLECS_SANITIZE" else "",
+                .depends_on_build => if (builtin.mode == .debug) "-DFLECS_SANITIZE" else "",
             },
             "-DFLECS_CUSTOM_BUILD",
             if (addons.includeAddon(.alerts)) "-DFLECS_ALERTS" else "",
@@ -675,6 +675,16 @@ pub fn build(b: *std.Build) void {
     tests_module.addOptions("build-options", options);
     tests_module.addIncludePath(b.path("libs/flecs"));
     tests_module.linkLibrary(lib);
+
+    const Translator = @import("translate_c").Translator;
+    const translate_c = b.dependency("translate_c", .{});
+
+    const t: Translator = .init(translate_c, .{
+        .c_source_file = b.path("libs/flecs/flecs.h"),
+        .target = target,
+        .optimize = optimize,
+    });
+    tests_module.addImport("cflecs", t.mod);
 
     const tests = b.addTest(.{
         .name = "zflecs-tests",

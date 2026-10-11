@@ -2,7 +2,13 @@
     .name = .zflecs,
     .fingerprint = 0xb539547bca77f3d4,
     .version = "0.2.0-dev",
-    .minimum_zig_version = "0.15.1",
+    .dependencies = .{
+        .translate_c = .{
+            .url = "git+https://codeberg.org/ziglang/translate-c?ref=2.0.1#4f5ad374e50d1a98d3da79fa5d3bda9949103bf7",
+            .hash = "translate_c-2.0.1-Q_BUWmpOBwCIhy--up1q6cl3OlIQE86iJU8R-bZ01aPj",
+        },
+    },
+    .minimum_zig_version = "0.17.0",
     .paths = .{
         "build.zig",
         "build.zig.zon",
