@@ -693,4 +693,26 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(tests);
 
     test_step.dependOn(&b.addRunArtifact(tests).step);
+
+    const comptime_test_step = b.step("test-comptime", "Run zflecs comptime tests");
+    const comptime_tests_module = b.createModule(.{
+        .root_source_file = b.path("src/comptime_error_tests.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
+    comptime_tests_module.addOptions("build-options", options);
+    comptime_tests_module.addIncludePath(b.path("libs/flecs"));
+    comptime_tests_module.linkLibrary(lib);
+
+    const comptime_tests = b.addTest(.{
+        .name = "zflecs-comptime-tests",
+        .root_module = comptime_tests_module,
+    });
+    comptime_tests.expect_errors = .{
+        .contains = "Tags are not allowed in system functions.",
+    };
+    b.installArtifact(comptime_tests);
+
+    comptime_test_step.dependOn(&comptime_tests.step);
 }

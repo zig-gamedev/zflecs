@@ -3006,6 +3006,13 @@ pub fn SYSTEM_DESC(comptime fn_system: anytype) system_desc_t {
         const param_type_info = @typeInfo(p.?).pointer;
         const inout = if (param_type_info.attrs.@"const") .In else .InOut;
         system_desc.query.terms[i - start_index] = .{ .id = id(param_type_info.child), .inout = inout };
+
+        const child_info = @typeInfo(param_type_info.child).@"struct";
+        if (child_info.fields.len == 0) {
+            @compileError(
+                "Tags are not allowed in system functions.",
+            );
+        }
     }
 
     return system_desc;
