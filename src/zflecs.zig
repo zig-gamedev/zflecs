@@ -1350,8 +1350,6 @@ pub fn init() *world_t {
         os.ecs_os_api.abort_ = flecs_abort;
     }
 
-    assert(num_worlds == 0);
-
     if (num_worlds == 0) {
         EcsAllocator.gpa = .{};
         EcsAllocator.allocator = EcsAllocator.gpa.?.allocator();
@@ -1448,27 +1446,24 @@ pub fn init() *world_t {
 extern fn ecs_init() *world_t;
 
 pub fn fini(world: *world_t) i32 {
-    assert(num_worlds == 1);
     num_worlds -= 1;
-
     const fini_result = ecs_fini(world);
+    return fini_result;
+}
+extern fn ecs_fini(world: *world_t) i32;
 
+pub fn deinit() void {
     var it = component_ids_hm.iterator();
     while (it.next()) |kv| {
         const ptr = kv.key_ptr.*;
         ptr.* = 0;
     }
-    component_ids_hm.clearRetainingCapacity();
+    component_ids_hm.clearAndFree();
 
-    if (num_worlds == 0) {
-        _ = EcsAllocator.gpa.?.deinit();
-        EcsAllocator.gpa = null;
-        EcsAllocator.allocator = null;
-    }
-
-    return fini_result;
+    _ = EcsAllocator.gpa.?.deinit();
+    EcsAllocator.gpa = null;
+    EcsAllocator.allocator = null;
 }
-extern fn ecs_fini(world: *world_t) i32;
 
 /// `pub fn is_fini(world: *const world_t) bool`
 pub const is_fini = ecs_is_fini;
@@ -2853,34 +2848,29 @@ extern fn ecs_set_threads(world: *world_t, threads: i32) void;
 
 /// `pub fn ecs_set_task_threads(world: *world_t, task_threads: i32) void`
 pub const set_task_threads = ecs_set_task_threads;
-extern fn ecs_set_task_threads(world: *world_t, task_threads: i32) void;
+extern fn ecs_set_task_threads(world: *world_t, threads: i32) void;
 
 /// `pub fn ecs_using_task_threads(world: *world_t) bool`
 pub const using_task_threads = ecs_using_task_threads;
 extern fn ecs_using_task_threads(world: *world_t) bool;
 
 //--------------------------------------------------------------------------------------------------
-//
-// Declarative functions (ECS_* macros in flecs)
-//
-//--------------------------------------------------------------------------------------------------
-// TODO: We support only one `world_t` at the time because type ids are stored in a global static memory.
-// We need to reset those ids to zero when the world is destroyed
-// (we do this in `pub fn fini(world: *world_t) i32`).
-var num_worlds: u32 = 0;
-var component_ids_hm = std.AutoHashMap(*id_t, u0).init(std.heap.page_allocator);
+// Component IDs are shared globally across worlds. When multiple worlds
+// register the same component, the global is updated to the latest ID.
+// If all worlds register components in the same order, IDs are identical
+// and set/get/etc work correctly for all worlds simultaneously.
+// Call deinit() after all worlds have been removed.
 
 pub fn COMPONENT(world: *world_t, comptime T: type) void {
     if (@sizeOf(T) == 0)
         @compileError("Size of the type must be greater than zero");
 
     const type_id_ptr = perTypeGlobalVarPtr(T);
-    if (type_id_ptr.* != 0)
-        return;
+    if (type_id_ptr.* == 0) {
+        component_ids_hm.put(type_id_ptr, 0) catch @panic("OOM");
+    }
 
-    component_ids_hm.put(type_id_ptr, 0) catch @panic("OOM");
-
-    type_id_ptr.* = ecs_component_init(world, &.{
+    const result = ecs_component_init(world, &.{
         .entity = ecs_entity_init(world, &.{
             .use_low_id = true,
             .name = typeName(T),
@@ -2901,6 +2891,23 @@ pub fn COMPONENT(world: *world_t, comptime T: type) void {
             },
         },
     });
+
+    // Guard: low-ID pool exhausted. Flecs silently falls back to regular
+    // entity IDs when the range is full, which breaks deterministic ID
+    // assignment across worlds.
+    if (result >= FLECS_HI_COMPONENT_ID) {
+        @panic("zflecs: low component ID pool exhausted. Reduce component/tag count or increase FLECS_HI_COMPONENT_ID.");
+    }
+
+    // Guard: when multiple worlds are active simultaneously, all of them
+    // must register components in the same order to keep IDs deterministic.
+    // A mismatch here means one world already has a different ID for this
+    // type, which would cause silent failures in queries and systems.
+    if (type_id_ptr.* != 0 and num_worlds > 1) {
+        std.debug.assert(result == type_id_ptr.*);
+    }
+
+    type_id_ptr.* = result;
 }
 
 pub fn TAG(world: *world_t, comptime T: type) void {
@@ -2908,13 +2915,24 @@ pub fn TAG(world: *world_t, comptime T: type) void {
         @compileError("Size of the type must be zero");
 
     const type_id_ptr = perTypeGlobalVarPtr(T);
-    if (type_id_ptr.* != 0)
-        return;
+    if (type_id_ptr.* == 0) {
+        component_ids_hm.put(type_id_ptr, 0) catch @panic("OOM");
+    }
 
-    component_ids_hm.put(type_id_ptr, 0) catch @panic("OOM");
 
-    type_id_ptr.* = ecs_entity_init(world, &.{ .name = typeName(T) });
+    const result = ecs_entity_init(world, &.{ .use_low_id = true, .name = typeName(T) });
+    if (result >= FLECS_HI_COMPONENT_ID) {
+        @panic("zflecs: low component ID pool exhausted. Reduce component/tag count or increase FLECS_HI_COMPONENT_ID.");
+    }
+
+    if (type_id_ptr.* != 0 and num_worlds > 1) {
+        std.debug.assert(result == type_id_ptr.*);
+    }
+
+    type_id_ptr.* = result;
 }
+var num_worlds: u32 = 0;
+var component_ids_hm = std.AutoHashMap(*id_t, u0).init(std.heap.page_allocator);
 
 pub fn SYSTEM(
     world: *world_t,
